@@ -2,7 +2,7 @@
 
 ## Status and objective
 
-The plan is approved by the user. P0 created the public repository `frdeange/FabricF1Demo` on `main`, the English roadmap issue [#1](https://github.com/frdeange/FabricF1Demo/issues/1), and linked package issues #2–#15. The CI/CD foundation is being prepared for issue [#8](https://github.com/frdeange/FabricF1Demo/issues/8) on branch `8-ci-cd-foundation`. Concrete cloud resource scope, permissions, and budget must still be agreed before deployment. No cloud resources have been deployed.
+The plan is approved by the user. P0 created the public repository `frdeange/FabricF1Demo` on `main`, the English roadmap issue [#1](https://github.com/frdeange/FabricF1Demo/issues/1), and linked package issues #2–#15. The validation-only CI foundation for issue [#8](https://github.com/frdeange/FabricF1Demo/issues/8) is committed on branch `8-ci-cd-foundation` at `1455a224`; GitHub Actions passed. The unattended cloud-deployment pilot remains blocked pending approval and qualification of concrete resource targets, permissions, and budget. No cloud resources have been deployed.
 
 Review after feedback: GitHub is the source of truth, and GitHub Actions orchestrates CI/CD from the first delivery; manual deployments must not be the normal route. Additional review: all partner-shareable deliverables and GitHub traceability are in English; specialized agents and model/effort choices are defined per phase, favoring capability without using oversized models or high reasoning for mechanical tasks.
 

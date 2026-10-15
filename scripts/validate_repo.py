@@ -40,7 +40,7 @@ PLAN_INVARIANTS = [
     "issue [#8]",
     "8-ci-cd-foundation",
     "No cloud resources have been deployed.",
-    "Concrete cloud resource scope, permissions, and budget must still be agreed before deployment.",
+    "pending approval and qualification of concrete resource targets, permissions, and budget",
     "English is the default language",
 ]
 
