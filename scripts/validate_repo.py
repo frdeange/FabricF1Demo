@@ -17,6 +17,7 @@ SETUP_PYTHON_SHA = "a26af69be951a213d495a4c3e4e4022e16d87065"
 INTERNAL_SIBLING_NAME = "FilesAndReferences"
 
 REQUIRED_FILES = [
+    "README.md",
     "AGENTS.md",
     "EXECUTION-PLAN.md",
     ".github/workflows/ci.yml",
@@ -39,9 +40,17 @@ PLAN_INVARIANTS = [
     "frdeange/FabricF1Demo",
     "issue [#8]",
     "8-ci-cd-foundation",
-    "No cloud resources have been deployed.",
-    "pending approval and qualification of concrete resource targets, permissions, and budget",
+    "records a separately approved four-resource Terraform deployment",
+    "Infrastructure deployment does not qualify workloads or unattended deployment.",
+    "F2 workload fitness remain unqualified.",
+    "Terraform uses one external local state",
     "English is the default language",
+]
+
+STALE_NO_DEPLOYMENT_CLAIMS = [
+    "No cloud resources have been deployed.",
+    "No Fabric or Azure resources have been deployed.",
+    "No deployment has been qualified",
 ]
 
 
@@ -76,6 +85,20 @@ def check_plan_invariants(root: Path) -> list[str]:
         for phrase in PLAN_INVARIANTS
         if phrase not in plan
     ]
+
+
+def check_stale_deployment_claims(root: Path) -> list[str]:
+    errors: list[str] = []
+    for relative_path in (
+        "README.md",
+        "EXECUTION-PLAN.md",
+        "docs/deployment-ownership-support-matrix.md",
+    ):
+        text = read_repo_text(root, relative_path)
+        for phrase in STALE_NO_DEPLOYMENT_CLAIMS:
+            if phrase.casefold() in text.casefold():
+                errors.append(f"{relative_path} contains stale deployment claim: {phrase}")
+    return errors
 
 
 def find_unpinned_actions(workflow_text: str, workflow_name: str = "workflow") -> list[str]:
@@ -160,7 +183,9 @@ def check_deployment_matrix(root: Path) -> list[str]:
         "Issue #8 must remain open",
         "unattended deployment pilot",
         "BLOCKED",
-        "target identity, workspace, region, budget",
+        "approved unattended deployment identity and permissions",
+        "protected state, coordination and recovery",
+        "Terraform uses one external local state",
         "Rayfin 1.36.2 deployment pipeline excludes functions/secrets",
         "One writer per artifact and destination",
         "fabric-cicd is suitable for supported Fabric item definitions",
@@ -179,6 +204,7 @@ def run_checks(root: Path | None = None) -> list[str]:
     if errors:
         return errors
     errors.extend(check_plan_invariants(root))
+    errors.extend(check_stale_deployment_claims(root))
     errors.extend(check_workflow(root))
     errors.extend(check_internal_sibling_not_copied(root))
     errors.extend(check_portable_foundation_text(root))

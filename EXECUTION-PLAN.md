@@ -2,7 +2,11 @@
 
 ## Status and objective
 
-The plan is approved by the user. P0 created the public repository `frdeange/FabricF1Demo` on `main`, the English roadmap issue [#1](https://github.com/frdeange/FabricF1Demo/issues/1), and linked package issues #2–#15. The validation-only CI foundation for issue [#8](https://github.com/frdeange/FabricF1Demo/issues/8) is committed on branch `8-ci-cd-foundation` at `1455a224`; GitHub Actions passed. The unattended cloud-deployment pilot remains blocked pending approval and qualification of concrete resource targets, permissions, and budget. No cloud resources have been deployed.
+The plan is approved by the user. P0 created the public repository `frdeange/FabricF1Demo` on `main`, the English roadmap issue [#1](https://github.com/frdeange/FabricF1Demo/issues/1), and linked package issues #2–#15. The validation-only CI foundation for issue [#8](https://github.com/frdeange/FabricF1Demo/issues/8) is committed on branch `8-ci-cd-foundation`: initial foundation `1455a224`, then status alignment `61bd6a2`; the recorded GitHub Actions runs passed. This foundation is not merged into `main`.
+
+The existing issue [#3](https://github.com/frdeange/FabricF1Demo/issues/3) owner handoff records a separately approved four-resource Terraform deployment: `rg-f1demo-swc`, F2 capacity `f1democapswc` in Sweden Central, and workspaces `f1-dev` and `f1-pro` on that capacity. It records four creates, no changes or deletions, and a no-change post-apply plan. The capacity was Active at verification. This is historical evidence, not a fresh live-state check. The #3 handoff and infrastructure changes remain uncommitted on `3-execution-environment`, separate from the #8 branch.
+
+Infrastructure deployment does not qualify workloads or unattended deployment. Fabric Apps/Rayfin, workload identities and permissions, applicable licensing, and F2 workload fitness remain unqualified. Terraform uses one external local state; protected state, coordination, recovery and clean-runner authentication remain #8 blockers, not work implemented here. `f1-pro` is a stable demo workspace, not production. No additional infrastructure, budgets, autopause or autoscale are configured; F4 requires separate approval. Issues #3 and #8 remain open. This status update authorizes no cloud operation.
 
 Review after feedback: GitHub is the source of truth, and GitHub Actions orchestrates CI/CD from the first delivery; manual deployments must not be the normal route. Additional review: all partner-shareable deliverables and GitHub traceability are in English; specialized agents and model/effort choices are defined per phase, favoring capability without using oversized models or high reasoning for mechanical tasks.
 
@@ -20,7 +24,7 @@ This English execution plan is the partner-shareable repository artifact; it exc
 - Sustainability comes first: avoid fragile trials, or make sure they can be reconstructed.
 - SAP authenticity should be evaluated further before choosing SAP-shaped data.
 - The development split across agents will be defined after the scope is settled.
-- The user has corporate Fabric capacity and usable Azure subscription access. Concrete capacity, permissions, region, quotas, and budget have not been verified.
+- The #3 owner handoff records the approved F2 deployment in Sweden Central, regional/quota checks and the approved bootstrap operator. This does not qualify application identities, workload permissions, licensing or full-demo capacity fit; future spend and access changes require separate approval.
 - The user considers a 30-day SAP window acceptable if the environment can be reconstructed easily. Do not dismiss S/4HANA advanced trial / CAL because of duration alone. Prioritize evaluating it as a real ERP source, subject to usage rights.
 - The demo will be shown to customers or partners. The ordinary free CAL trial is not considered enabled for that use according to its FAQ; confirm demo rights through the applicable agreement before activating or presenting an SAP environment.
 - User decision: Plan A uses a real SAP ERP obtained through a still-unknown route; Plan B mirrors the colleagues’ approach with a synthetic SAP source and qualified native Fabric processing. Do not block design while waiting for Plan A first. The design is approved; every deployment still requires concrete resources and qualified usage rights.
@@ -30,7 +34,7 @@ This English execution plan is the partner-shareable repository artifact; it exc
 - The internal Hub must be a rich and complete experience comparable to the reference, not a simple admin console for the fan portal. The consumer portal has different content and UX. The user questioned the benefit of merging them and asked for a recommendation on topology and identities. Confirmed decision: two Rayfin apps, one connected business, separate experiences and permissions, with shared contracts and shared processes.
 - Confirmed scope for the first full demo: the two apps and the six Hub areas described below, linked by business journeys. Delivery will be staged; the Hub will not be reduced to a minimal console and the portal will not be deferred.
 - Out of scope for the first phase: real charges, broadcast video/radio, autonomous agent decisions, advanced financial planning, and production exploitation.
-- Confirmed requirement: work in a GitHub repository and deploy through GitHub Actions with fabric-cicd, CLI/APIs, and CI/CD practices suitable for each resource type. Do not create or configure the repository, identities, or resources yet.
+- Confirmed requirement: work in a GitHub repository and use GitHub Actions for routine deployment with fabric-cicd, CLI/APIs, and CI/CD practices suitable for each resource type. The separately approved #3 Terraform bootstrap is recorded above; it does not qualify unattended deployment or authorize further resources or identities.
 - Confirmed requirement: deliverables in English for sharing with partners across the region, including issues and labels. The conversation may continue in Spanish; do not introduce a second localization for the apps by default.
 - User model criterion: prefer intelligence over cost, but match the model/effort to the actual difficulty and avoid over-sizing tasks.
 
@@ -47,7 +51,7 @@ GitHub issue titles/bodies, acceptance criteria, labels/descriptions, milestones
 - Private local reference materials informed planning but are excluded from this public repository; their source files, filenames, paths, and extracted metadata are not reproduced here.
 - No sports dataset has been qualified for redistribution or commercial demonstration; do not assume lap times are sufficient to reconstruct real coordinates.
 - Any dataset used later requires legitimate access and separate validation of its schema, license, and coverage.
-- No existing Fabric workspace or its infrastructure has been inspected.
+- The #3 handoff and subsequent read-only planning verification report the resource group, F2 capacity and two workspaces above. The planning inventory reported empty item lists in both workspaces, without continuation pages. These were scoped observations at verification, not a current or tenant-wide inventory. No new cloud checks were performed for this documentation alignment.
 - There is no local Rayfin project, no installed packages, and no documentation for a version chosen for this demo. No scaffolding has been done during planning.
 
 ### Public reference fredgis/FabricHubDemo
@@ -291,7 +295,7 @@ Start with the most uncertain source and one vertical journey before deploying m
 
 | ID | Delivery | Issue | Dependencies | Output and gate to advance |
 | --- | --- | --- | --- | --- |
-| P0 | Preparation and execution agreements | [#3](https://github.com/frdeange/FabricF1Demo/issues/3) | Plan approval | Agreed GitHub repository, reviewed instructions, roadmap and package issues in English, proposed/reviewed labels for approval, and default branch identified; DEV/DEMO destinations, identities, and budget approved before spending |
+| P0 | Preparation and execution agreements | [#3](https://github.com/frdeange/FabricF1Demo/issues/3) | Plan approval | Repository conventions and approved Terraform bootstrap recorded; reconcile evidence and retain workload, identity, licensing and capacity-fit gates before declaring readiness. Issue remains open |
 | PC | CI/CD foundation | [#8](https://github.com/frdeange/FabricF1Demo/issues/8) | P0 | Branch/PR CI and Actions workflows for provision/deployment, support matrix, unattended auth, and environment configuration; repeatable minimal deployment from a runner |
 | P1 | Contracts and scenarios | [#5](https://github.com/frdeange/FabricF1Demo/issues/5) | P0 | Models, states, master data, and data manifest; four journeys described with verifiable inputs and outputs |
 | P2 | Deployed Rayfin feasibility | [#9](https://github.com/frdeange/FabricF1Demo/issues/9) | PC, P1 | Two minimal items deployed from GitHub Actions, SSO/permissions, a single order visible across apps, Fabric read, and temporal consumption proven in browser; allowed version/path recorded |
@@ -314,7 +318,7 @@ P3/P4/P5 can be split by contracts after P2. P7 and P8 are independent from each
 
 - One GitHub repository for code, contracts, Fabric definitions, IaC, migrations, secret-free configuration, workflows, and runbooks. P0 agrees owner/name and visibility, or reuses an existing repository. Do not run on a folder without Git.
 - GitHub Flow, protected default branch, reviews, and required checks according to the available GitHub plan; no permanent dev/test/prod branches by default.
-- Proposed two isolated DEV and DEMO destinations, each with its two apps and Fabric artifacts; they may share existing capacity if the budget and limits allow it. Do not treat DEMO as production for real consumers.
+- Existing `f1-dev` and `f1-pro` are DEV and stable DEMO destinations on the same F2 capacity. Workspace separation is not compute isolation. Two apps per destination remain the intended design, not deployed functionality. Qualify shared-capacity load; do not treat DEMO as production for real consumers.
 - GitHub Environments dev/demo separate bindings, secrets, and approvals. Confirm real support for reviewers/protections; if unavailable, use an explicit equivalent manual gate, not a fake protection.
 - Each release identifies commit SHA, locked versions, artifact hashes, resource manifest, ID mappings, and dataset version. Promote only the revision that was already tested, never the latest floating HEAD.
 
@@ -322,8 +326,9 @@ P3/P4/P5 can be split by contracts after P2. P7 and P8 are independent from each
 
 | Surface | Initial proposed tool | Boundary and condition |
 | --- | --- | --- |
-| Azure: required Oracle/gateway/worker/storage/network | Bicep and Azure CLI from Actions, with preview/what-if | Do not mix in Terraform by default; resources and roles require approval and visible cost |
-| Fabric workspaces and connections | Manifests and supported REST/CLI, idempotent | Separate privileged bootstrap from routine deployment; check SP support per operation |
+| Existing resource group, Fabric capacity and workspaces | Terraform under #3 ownership, with one external local state | No competing writer, second active state or blind empty-state apply. Shared-state protection, recovery and unattended execution remain #8 gates |
+| Future Oracle/gateway/worker/storage/network resources | Tooling and scope not selected by this alignment | No additional infrastructure is approved; agree ownership, resources, roles, cost and rollback separately |
+| Fabric connections and non-Terraform-owned bindings | Manifests and supported REST/CLI, idempotent | Do not re-own the Terraform workspaces. Separate privileged bootstrap from routine deployment; check SP support per operation |
 | Supported Fabric definitions | fabric-cicd with fixed version and explicit scope | Validate type and properties; deploy dependencies and verify rebinding, not copy DEV IDs |
 | Rayfin apps and own models | Versioned Rayfin CLI from Actions | Full deployment supported per app/environment, including its functions through the documented route; do not hand its children to another deployer |
 | DDL and serving contracts not managed by Rayfin | Versioned migrations/scripts by endpoint | Do not use Git sync as a data migration mechanism; changes must remain compatible and reconciled |
@@ -495,7 +500,7 @@ The roadmap is not authorization to start every issue. Keep a single active deli
 | Dependency | Consequence | Treatment in the plan |
 | --- | --- | --- |
 | Repository and publication scope | Public repository and roadmap/issues now exist; implementation is beginning | Preserve public-content boundaries; do not publish internal references |
-| Workspace/region/quotas/budget and Rayfin enablement | No deployment has been qualified | Preflight and resource approval before spending/access changes |
+| Bootstrap evidence and remaining workload readiness | #3 records deployed targets, region/quota and approved bootstrap-spend evidence; Rayfin, licensing and shared F2 workload fit remain unqualified | Preserve the bootstrap evidence without claiming workload readiness. Budget controls are not configured; future spend/access changes and workload enablement require separate approval |
 | CI/CD by type and unattended authentication | Support documented partially, not qualified in tenant/runner | Gate PC/P2, per-operation matrix, OIDC where it works, and manual bootstrap declared where needed |
 | Operational persistence between two items | No concrete path proven | Mandatory P2 gate; if it fails, resolve before P3-P8 |
 | SAP Plan A source and test/demo rights | Cannot promise a real connected ERP | Advance through Plan B and prepare PA without pretending availability |
