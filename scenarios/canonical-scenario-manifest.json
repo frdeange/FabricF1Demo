@@ -1,0 +1,538 @@
+{
+  "manifestVersion": "1.0.0",
+  "scenarioId": "synthetic-grand-prix-promoter-v1",
+  "scenarioVersion": "1.0.0",
+  "datasetId": "synthetic-gp-dataset-v1",
+  "seed": "f1-demo-contract-fixture-001",
+  "language": "en",
+  "dataOrigin": "synthetic-only",
+  "provenanceLabel": "SYNTHETIC SCENARIO - NOT CONNECTED SOURCE DATA",
+  "sapPlan": "B",
+  "scope": "One fictional promoter event, one synthetic replay session, and bounded synthetic commercial, support, sponsorship, and cost records.",
+  "replay": {
+    "sessionKey": "SES-SYN-001",
+    "replayRunKey": "RUN-SYN-001",
+    "publicationKey": "PUB-SYN-001",
+    "playbackSpeed": 1,
+    "playbackAt": "2030-06-15T14:01:30Z",
+    "visibilityAsOf": "2030-06-15T14:03:00Z",
+    "publication": {
+      "canonicalKey": "PUB-SYN-001",
+      "publicationKey": "PUB-SYN-001",
+      "recordState": "published",
+      "sourceSystem": "synthetic-scenario-generator",
+      "sourceTenant": "synthetic-gp-dataset-v1",
+      "sourceEntity": "SourcePublication",
+      "sourceKey": "PUB-SYN-001",
+      "sourceUpdatedAt": "2030-06-15T14:02:30Z",
+      "ingestedAt": "2030-06-15T14:02:30Z",
+      "schemaVersion": "1.0.0",
+      "sourceAsOf": "2030-06-15T14:02:11Z",
+      "publishedAt": "2030-06-15T14:02:30Z",
+      "datasetId": "synthetic-gp-dataset-v1",
+      "sapPlan": "B",
+      "dataOrigin": "synthetic-only"
+    },
+    "eventSamples": [
+      {
+        "canonicalKey": "RACE-EVT-SYN-001",
+        "raceEventKey": "RACE-EVT-SYN-001",
+        "recordState": "normalized",
+        "sourceSystem": "synthetic-scenario-generator",
+        "sourceTenant": "synthetic-gp-dataset-v1",
+        "sourceEntity": "RaceEventEnvelope",
+        "sourceKey": "SOURCE-RACE-EVT-SYN-001",
+        "sourceUpdatedAt": "2030-06-15T14:00:10Z",
+        "sequence": 1,
+        "eventTime": "2030-06-15T14:00:10Z",
+        "ingestedAt": "2030-06-15T14:00:11Z",
+        "publicationKey": "PUB-SYN-001",
+        "schemaVersion": "1.0.0",
+        "dataOrigin": "synthetic-only",
+        "lap": 1,
+        "syntheticPosition": 1
+      },
+      {
+        "canonicalKey": "RACE-EVT-SYN-002",
+        "raceEventKey": "RACE-EVT-SYN-002",
+        "recordState": "normalized",
+        "sourceSystem": "synthetic-scenario-generator",
+        "sourceTenant": "synthetic-gp-dataset-v1",
+        "sourceEntity": "RaceEventEnvelope",
+        "sourceKey": "SOURCE-RACE-EVT-SYN-002",
+        "sourceUpdatedAt": "2030-06-15T14:01:10Z",
+        "sequence": 2,
+        "eventTime": "2030-06-15T14:01:10Z",
+        "ingestedAt": "2030-06-15T14:01:11Z",
+        "publicationKey": "PUB-SYN-001",
+        "schemaVersion": "1.0.0",
+        "dataOrigin": "synthetic-only",
+        "lap": 1,
+        "syntheticPosition": 2
+      },
+      {
+        "canonicalKey": "RACE-EVT-SYN-003",
+        "raceEventKey": "RACE-EVT-SYN-003",
+        "recordState": "normalized",
+        "sourceSystem": "synthetic-scenario-generator",
+        "sourceTenant": "synthetic-gp-dataset-v1",
+        "sourceEntity": "RaceEventEnvelope",
+        "sourceKey": "SOURCE-RACE-EVT-SYN-003",
+        "sourceUpdatedAt": "2030-06-15T14:02:10Z",
+        "sequence": 3,
+        "eventTime": "2030-06-15T14:02:10Z",
+        "ingestedAt": "2030-06-15T14:02:11Z",
+        "publicationKey": "PUB-SYN-001",
+        "schemaVersion": "1.0.0",
+        "dataOrigin": "synthetic-only",
+        "lap": 2,
+        "syntheticPosition": 1
+      }
+    ],
+    "visibleRaceEventKeysAtPlaybackAt": [
+      "RACE-EVT-SYN-001",
+      "RACE-EVT-SYN-002"
+    ],
+    "hiddenRaceEventKeysAtPlaybackAt": [
+      "RACE-EVT-SYN-003"
+    ],
+    "liveSession": "unavailable-not-tested"
+  },
+  "referenceInputs": {
+    "event": {
+      "eventKey": "EVT-SYN-001",
+      "displayName": "Synthetic Grand Prix Demo",
+      "eventStartAt": "2030-06-15T13:00:00Z",
+      "eventEndAt": "2030-06-15T18:00:00Z",
+      "recordState": "open",
+      "dataOrigin": "synthetic-only"
+    },
+    "session": {
+      "sessionKey": "SES-SYN-001",
+      "eventKey": "EVT-SYN-001",
+      "displayName": "Synthetic Race Replay",
+      "recordState": "available",
+      "dataOrigin": "synthetic-only"
+    },
+    "parties": [
+      {
+        "partyKey": "PTY-SYN-FAN-01",
+        "partyType": "person",
+        "displayName": "Synthetic Fan One",
+        "email": "fan.one@example.test"
+      },
+      {
+        "partyKey": "PTY-SYN-BUYER-01",
+        "partyType": "organization",
+        "displayName": "Synthetic Hospitality Buyer"
+      },
+      {
+        "partyKey": "PTY-SYN-SPONSOR-01",
+        "partyType": "organization",
+        "displayName": "Synthetic Sponsor"
+      }
+    ],
+    "sponsorAccount": {
+      "sponsorAccountKey": "SPONSOR-SYN-001",
+      "partyKey": "PTY-SYN-SPONSOR-01",
+      "recordState": "active",
+      "dataOrigin": "synthetic-only"
+    },
+    "prices": [
+      { "priceKey": "PRICE-SYN-REPLAY-01", "productKey": "PRD-SYN-REPLAY-01", "amountMinor": 5000, "currency": "USD", "recordState": "active", "effectiveFrom": "2030-01-01T00:00:00Z", "effectiveTo": "2031-01-01T00:00:00Z", "taxTreatment": "not_applicable" },
+      { "priceKey": "PRICE-SYN-LIVE-01", "productKey": "PRD-SYN-LIVE-01", "amountMinor": 7500, "currency": "USD", "recordState": "active", "effectiveFrom": "2030-01-01T00:00:00Z", "effectiveTo": "2031-01-01T00:00:00Z", "taxTreatment": "not_applicable" },
+      { "priceKey": "PRICE-SYN-HOSP-01", "productKey": "PRD-SYN-HOSP-01", "amountMinor": 100000, "currency": "USD", "recordState": "active", "effectiveFrom": "2030-01-01T00:00:00Z", "effectiveTo": "2031-01-01T00:00:00Z", "taxTreatment": "not_applicable" },
+      { "priceKey": "PRICE-SYN-WEEKEND-01", "productKey": "PRD-SYN-WEEKEND-01", "amountMinor": 105000, "currency": "USD", "recordState": "active", "effectiveFrom": "2030-01-01T00:00:00Z", "effectiveTo": "2031-01-01T00:00:00Z", "taxTreatment": "not_applicable" }
+    ],
+    "bundleComponents": [
+      { "bundleComponentKey": "BUNDLE-COMP-SYN-001", "bundleProductKey": "PRD-SYN-WEEKEND-01", "componentProductKey": "PRD-SYN-REPLAY-01", "quantity": 1 },
+      { "bundleComponentKey": "BUNDLE-COMP-SYN-002", "bundleProductKey": "PRD-SYN-WEEKEND-01", "componentProductKey": "PRD-SYN-HOSP-01", "quantity": 1 }
+    ],
+    "products": [
+      {
+        "productKey": "PRD-SYN-REPLAY-01",
+        "displayName": "Replay Pass",
+        "recordState": "published",
+        "availability": "available"
+      },
+      {
+        "productKey": "PRD-SYN-LIVE-01",
+        "displayName": "Live Race Pass",
+        "recordState": "published",
+        "availability": "unavailable-no-qualified-live-source"
+      },
+      {
+        "productKey": "PRD-SYN-HOSP-01",
+        "displayName": "Hospitality Package",
+        "recordState": "published",
+        "availability": "available"
+      },
+      {
+        "productKey": "PRD-SYN-WEEKEND-01",
+        "displayName": "Weekend Bundle",
+        "recordState": "published",
+        "availability": "available"
+      }
+    ],
+    "drivers": [
+      { "driverKey": "DRV-SYN-01", "displayName": "Synthetic Driver One" },
+      { "driverKey": "DRV-SYN-02", "displayName": "Synthetic Driver Two" },
+      { "driverKey": "DRV-SYN-03", "displayName": "Synthetic Driver Three" }
+    ],
+    "circuitZones": [
+      { "zoneKey": "ZONE-SYN-01", "displayName": "Synthetic Grandstand North", "capacity": 100 },
+      { "zoneKey": "ZONE-SYN-02", "displayName": "Synthetic Paddock", "capacity": 30 }
+    ],
+    "campaign": {
+      "campaignKey": "CAMPAIGN-SYN-001",
+      "displayName": "Synthetic Replay Launch",
+      "recordState": "ended"
+    },
+    "consent": {
+      "consentKey": "CONSENT-SYN-001",
+      "partyKey": "PTY-SYN-FAN-01",
+      "purpose": "synthetic-demo-marketing",
+      "state": "granted"
+    },
+    "campaignTouch": {
+      "campaignTouchKey": "TOUCH-SYN-001",
+      "partyKey": "PTY-SYN-FAN-01",
+      "campaignKey": "CAMPAIGN-SYN-001",
+      "state": "recorded"
+    },
+    "incident": {
+      "incidentKey": "INCIDENT-SYN-001",
+      "eventKey": "EVT-SYN-001",
+      "state": "resolved",
+      "dataOrigin": "synthetic-only"
+    }
+  },
+  "journeys": [
+    {
+      "journeyId": "fan-purchase",
+      "name": "Fan purchase and replay access",
+      "inputs": {
+        "eventKey": "EVT-SYN-001",
+        "partyKey": "PTY-SYN-FAN-01",
+        "productKey": "PRD-SYN-REPLAY-01",
+        "priceKey": "PRICE-SYN-REPLAY-01",
+        "commandIdempotencyKey": "cmd-syn-fan-buy-001",
+        "erpPlan": "B",
+        "dataOrigin": "synthetic-only"
+      },
+      "expectedOutputs": {
+        "orderKey": "ORD-SYN-FAN-001",
+        "orderState": "confirmed",
+        "orderGrossMinor": 5000,
+        "paymentSimulationKey": "PAY-SYN-001",
+        "paymentAmountMinor": 5000,
+        "paymentState": "approved",
+        "simulatedOnly": true,
+        "entitlementKey": "ENT-SYN-FAN-001",
+        "entitlementStateBeforeComplaint": "active",
+        "erpDocumentKey": "ERP-SYN-INV-FAN-001",
+        "erpDocumentType": "customer_invoice",
+        "erpDocumentState": "posted",
+        "documentLinkKey": "LINK-SYN-FAN-INV-001",
+        "retryReturnsSameKeys": true,
+        "additionalOrdersOnRetry": 0,
+        "additionalPaymentsOnRetry": 0,
+        "additionalEntitlementsOnRetry": 0
+      }
+    },
+    {
+      "journeyId": "hospitality-b2b",
+      "name": "Hospitality reservation, order, invoice, and cost",
+      "inputs": {
+        "eventKey": "EVT-SYN-001",
+        "partyKey": "PTY-SYN-BUYER-01",
+        "syntheticSalesforceAccountKey": "SF-ACCOUNT-SYN-BUYER-01",
+        "syntheticSalesforceOpportunityKey": "SF-OPP-SYN-HOSP-01",
+        "productKey": "PRD-SYN-HOSP-01",
+        "priceKey": "PRICE-SYN-HOSP-01",
+        "requestedQuantity": 1,
+        "commandIdempotencyKey": "cmd-syn-hosp-buy-001",
+        "dataOrigin": "synthetic-only"
+      },
+      "expectedOutputs": {
+        "reservationKey": "RSV-SYN-HOSP-001",
+        "reservationState": "confirmed",
+        "orderKey": "ORD-SYN-HOSP-001",
+        "orderState": "confirmed",
+        "orderGrossMinor": 100000,
+        "paymentSimulationKey": "PAY-SYN-002",
+        "paymentAmountMinor": 100000,
+        "paymentState": "approved",
+        "entitlementKey": "ENT-SYN-HOSP-001",
+        "entitlementState": "active",
+        "erpDocumentKey": "ERP-SYN-INV-HOSP-001",
+        "erpDocumentType": "customer_invoice",
+        "erpDocumentState": "posted",
+        "documentLinkKey": "LINK-SYN-HOSP-INV-001",
+        "supplierCostKey": "COST-SYN-HOSP-001",
+        "allocatedCostMinor": 25000,
+        "supplierCostDocumentKey": "ERP-SYN-SUPPLIER-HOSP-001",
+        "supplierCostDocumentType": "supplier_invoice",
+        "supplierCostDocumentLinkKey": "LINK-SYN-SUPPLIER-HOSP-001",
+        "currency": "USD",
+        "dataOrigin": "synthetic-only"
+      }
+    },
+    {
+      "journeyId": "complaint-credit",
+      "name": "Complaint, full scenario credit, and access effect",
+      "inputs": {
+        "caseKey": "CASE-SYN-FAN-001",
+        "partyKey": "PTY-SYN-FAN-01",
+        "orderKey": "ORD-SYN-FAN-001",
+        "entitlementKey": "ENT-SYN-FAN-001",
+        "supportRequestIdempotencyKey": "cmd-syn-case-001",
+        "creditDecisionRole": "support-finance-authorized-demo-role",
+        "dataOrigin": "synthetic-only"
+      },
+      "expectedOutputs": {
+        "caseState": "resolved",
+        "scenarioCreditKey": "CREDIT-SYN-FAN-001",
+        "creditState": "issued",
+        "creditType": "full-scenario-credit-not-money-refund",
+        "creditAmountMinor": 5000,
+        "creditCurrency": "USD",
+        "erpDocumentKey": "ERP-SYN-CM-FAN-001",
+        "erpDocumentType": "customer_credit_memo",
+        "erpDocumentState": "posted",
+        "documentLinkKey": "LINK-SYN-FAN-CM-001",
+        "entitlementStateAfterCredit": "revoked",
+        "revocationReason": "full-credit-unconsumed-access",
+        "dataOrigin": "synthetic-only"
+      }
+    },
+    {
+      "journeyId": "sponsorship",
+      "name": "Sponsorship agreement, commitment, documents, and cost",
+      "inputs": {
+        "eventKey": "EVT-SYN-001",
+        "sponsorAccountKey": "SPONSOR-SYN-001",
+        "partyKey": "PTY-SYN-SPONSOR-01",
+        "agreementKey": "AGREEMENT-SYN-001",
+        "commitmentKey": "COMMIT-SYN-001",
+        "dataOrigin": "synthetic-only"
+      },
+      "expectedOutputs": {
+        "agreementState": "active",
+        "contractedMinor": 2000000,
+        "invoicedMinor": 500000,
+        "fulfilledMinor": 800000,
+        "currency": "USD",
+        "sponsorInvoiceDocumentKey": "ERP-SYN-INV-SPONSOR-001",
+        "sponsorInvoiceDocumentType": "customer_invoice",
+        "sponsorInvoiceDocumentLinkKey": "LINK-SYN-SPONSOR-INV-001",
+        "commitmentEvidenceReference": "synthetic://synthetic-grand-prix-promoter-v1/evidence/COMMIT-SYN-001",
+        "supplierCostKey": "COST-SYN-SPONSOR-001",
+        "allocatedCostMinor": 10000,
+        "supplierCostDocumentKey": "ERP-SYN-SUPPLIER-SPONSOR-001",
+        "supplierCostDocumentType": "supplier_invoice",
+        "supplierCostDocumentLinkKey": "LINK-SYN-SUPPLIER-SPONSOR-001",
+        "followUpState": "open",
+        "roiClaimed": false,
+        "dataOrigin": "synthetic-only"
+      }
+    }
+  ],
+  "erpDocuments": [
+      {
+        "erpDocumentKey": "ERP-SYN-INV-FAN-001",
+        "documentType": "customer_invoice",
+        "amountMinor": 5000,
+        "currency": "USD",
+        "erpDocumentLineKey": "ERPL-SYN-001",
+        "lineQuantity": 1,
+        "lineNetMinor": 5000,
+        "lineTaxMinor": 0,
+        "lineGrossMinor": 5000,
+        "taxTreatment": "not_applicable",
+        "documentLinkKey": "LINK-SYN-FAN-INV-001",
+        "dataOrigin": "synthetic-only"
+      },
+      {
+        "erpDocumentKey": "ERP-SYN-INV-HOSP-001",
+        "documentType": "customer_invoice",
+        "amountMinor": 100000,
+        "currency": "USD",
+        "erpDocumentLineKey": "ERPL-SYN-002",
+        "lineQuantity": 1,
+        "lineNetMinor": 100000,
+        "lineTaxMinor": 0,
+        "lineGrossMinor": 100000,
+        "taxTreatment": "not_applicable",
+        "documentLinkKey": "LINK-SYN-HOSP-INV-001",
+        "dataOrigin": "synthetic-only"
+      },
+      {
+        "erpDocumentKey": "ERP-SYN-CM-FAN-001",
+        "documentType": "customer_credit_memo",
+        "amountMinor": 5000,
+        "currency": "USD",
+        "erpDocumentLineKey": "ERPL-SYN-003",
+        "lineQuantity": 1,
+        "lineNetMinor": 5000,
+        "lineTaxMinor": 0,
+        "lineGrossMinor": 5000,
+        "taxTreatment": "not_applicable",
+        "documentLinkKey": "LINK-SYN-FAN-CM-001",
+        "dataOrigin": "synthetic-only"
+      },
+      {
+        "erpDocumentKey": "ERP-SYN-INV-SPONSOR-001",
+        "documentType": "customer_invoice",
+        "amountMinor": 500000,
+        "currency": "USD",
+        "erpDocumentLineKey": "ERPL-SYN-004",
+        "lineQuantity": 1,
+        "lineNetMinor": 500000,
+        "lineTaxMinor": 0,
+        "lineGrossMinor": 500000,
+        "taxTreatment": "not_applicable",
+        "documentLinkKey": "LINK-SYN-SPONSOR-INV-001",
+        "dataOrigin": "synthetic-only"
+      },
+      {
+        "erpDocumentKey": "ERP-SYN-SUPPLIER-HOSP-001",
+        "documentType": "supplier_invoice",
+        "amountMinor": 25000,
+        "currency": "USD",
+        "erpDocumentLineKey": "ERPL-SYN-005",
+        "lineQuantity": 1,
+        "lineNetMinor": 25000,
+        "lineTaxMinor": 0,
+        "lineGrossMinor": 25000,
+        "taxTreatment": "not_applicable",
+        "documentLinkKey": "LINK-SYN-SUPPLIER-HOSP-001",
+        "dataOrigin": "synthetic-only"
+      },
+      {
+        "erpDocumentKey": "ERP-SYN-SUPPLIER-SPONSOR-001",
+        "documentType": "supplier_invoice",
+        "amountMinor": 10000,
+        "currency": "USD",
+        "erpDocumentLineKey": "ERPL-SYN-006",
+        "lineQuantity": 1,
+        "lineNetMinor": 10000,
+        "lineTaxMinor": 0,
+        "lineGrossMinor": 10000,
+        "taxTreatment": "not_applicable",
+        "documentLinkKey": "LINK-SYN-SUPPLIER-SPONSOR-001",
+        "dataOrigin": "synthetic-only"
+      }
+  ],
+  "expectedEntityCounts": {
+    "Event": 1,
+    "RaceSession": 1,
+    "Driver": 3,
+    "CircuitZone": 2,
+    "Product": 4,
+    "BundleComponent": 2,
+    "Price": 4,
+    "Party": 3,
+    "SponsorAccount": 1,
+    "Campaign": 1,
+    "Consent": 1,
+    "CampaignTouch": 1,
+    "CommercialOrder": 2,
+    "CommercialOrderLine": 2,
+    "PaymentSimulation": 2,
+    "Reservation": 1,
+    "Entitlement": 2,
+    "CRMCase": 1,
+    "Incident": 1,
+    "ScenarioCredit": 1,
+    "SponsorshipAgreement": 1,
+    "SponsorshipCommitment": 1,
+    "ERPDocument": 6,
+    "ERPDocumentLine": 6,
+    "DocumentLink": 6,
+    "SupplierCost": 2,
+    "CostAllocation": 2,
+    "RaceEventEnvelope": 3,
+    "ReplayRun": 1,
+    "SourcePublication": 1
+  },
+  "expectedEntityCountContributions": {
+    "referenceInputs": {
+      "Event": 1,
+      "RaceSession": 1,
+      "Driver": 3,
+      "CircuitZone": 2,
+      "Product": 4,
+      "BundleComponent": 2,
+      "Price": 4,
+      "Party": 3,
+      "SponsorAccount": 1,
+      "Campaign": 1,
+      "Consent": 1,
+      "CampaignTouch": 1,
+      "Incident": 1,
+      "RaceEventEnvelope": 3,
+      "ReplayRun": 1,
+      "SourcePublication": 1
+    },
+    "journeys": {
+      "fan-purchase": {
+        "CommercialOrder": 1,
+        "CommercialOrderLine": 1,
+        "PaymentSimulation": 1,
+        "Entitlement": 1,
+        "ERPDocument": 1,
+        "ERPDocumentLine": 1,
+        "DocumentLink": 1
+      },
+      "hospitality-b2b": {
+        "CommercialOrder": 1,
+        "CommercialOrderLine": 1,
+        "PaymentSimulation": 1,
+        "Reservation": 1,
+        "Entitlement": 1,
+        "ERPDocument": 2,
+        "ERPDocumentLine": 2,
+        "DocumentLink": 2,
+        "SupplierCost": 1,
+        "CostAllocation": 1
+      },
+      "complaint-credit": {
+        "CRMCase": 1,
+        "ScenarioCredit": 1,
+        "ERPDocument": 1,
+        "ERPDocumentLine": 1,
+        "DocumentLink": 1
+      },
+      "sponsorship": {
+        "SponsorshipAgreement": 1,
+        "SponsorshipCommitment": 1,
+        "ERPDocument": 2,
+        "ERPDocumentLine": 2,
+        "DocumentLink": 2,
+        "SupplierCost": 1,
+        "CostAllocation": 1
+      }
+    }
+  },
+  "reconciliation": {
+    "currency": "USD",
+    "commercialOrderGrossMinor": 105000,
+    "approvedSimulatedPaymentMinor": 105000,
+    "scenarioCreditMinor": 5000,
+    "commercialOrderNetAfterCreditMinor": 100000,
+    "postedCustomerInvoiceMinor": 605000,
+    "postedCustomerCreditMemoMinor": 5000,
+    "supplierCostMinor": 35000,
+    "sponsorshipContractedMinor": 2000000,
+    "sponsorshipInvoicedMinor": 500000,
+    "sponsorshipFulfilledMinor": 800000,
+    "notes": [
+      "Commercial order gross is not the sum of ERP documents.",
+      "Simulated payments are outcomes, not bank settlement or revenue.",
+      "Sponsor invoices are not commercial ticket/hospitality orders.",
+      "The full credit is a scenario compensation and not a money refund.",
+      "Supplier costs are separate from customer invoices and sponsorship fulfillment."
+    ]
+  }
+}
