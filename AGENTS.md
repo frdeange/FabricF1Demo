@@ -15,6 +15,12 @@
 
 ## Workflow
 
+- Use [the repository map](docs/engineering/repository-layout.md),
+  [contribution guide](CONTRIBUTING.md) and
+  [agent playbook](docs/engineering/agent-playbook.md) for placement and handoffs.
+- Preserve native artifact formats and active package ownership; documented
+  reserved folders are not implemented workloads or deployment approval.
+
 - Run the narrowest relevant checks before handing off. For this foundation slice, run `python -m scripts.validate_repo` and `python -m unittest discover -s tests -p "test_*.py" -v`.
 - Keep GitHub Actions on least-privilege permissions. Pin external actions to immutable full commit SHAs with release comments.
 - Do not commit, push, or open a PR unless the assignment explicitly authorizes it. A PR must wait for independent review and explicit user approval.

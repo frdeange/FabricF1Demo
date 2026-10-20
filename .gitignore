@@ -14,8 +14,20 @@ coverage/
 !.env.*.example
 local.settings.json
 rayfin/.deployments.json
+apps/*/rayfin/.deployments.json
 
 # Infrastructure state and local provider data
 .terraform/
 *.tfstate
 *.tfstate.*
+
+# Optional local generated outputs; generators still require an explicit path
+/generated/
+/artifacts/
+
+# Local infrastructure inputs/plans, not public example inputs or lockfiles
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+!*.tfvars.json.example
+*.tfplan

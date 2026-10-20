@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import json
 import re
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+from urllib.parse import unquote, urlsplit
 
 ACTION_REF_RE = re.compile(r"^\s*-?\s*uses:\s*([^\s#]+)", re.MULTILINE)
 FULL_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -15,6 +17,25 @@ PRIVATE_SOURCE_MARKER_RE = re.compile(
 CHECKOUT_SHA = "11bd71901bbe5b1630ceea73d27597364c9af683"
 SETUP_PYTHON_SHA = "a26af69be951a213d495a4c3e4e4022e16d87065"
 INTERNAL_SIBLING_NAME = "FilesAndReferences"
+SCAFFOLD_INVENTORY = "docs/engineering/scaffold-inventory.json"
+SCAFFOLD_AREAS = (
+    ".github", "apps", "apps/hub", "apps/fan", "packages", "packages/contracts",
+    "contracts", "scenarios", "sources", "sources/oracle", "sources/salesforce",
+    "sources/sap", "sources/sports", "infra", "fabric", "fabric/workspace",
+    "fabric/workspace/ingestion", "fabric/workspace/processing",
+    "fabric/workspace/analytics", "fabric/workspace/intelligence",
+    "fabric/workspace/realtime", "deploy", "deploy/environments",
+    "deploy/environments/dev", "deploy/environments/demo", "deploy/releases",
+    "scripts", "tests", "docs", "docs/engineering", "docs/runbooks",
+)
+SCAFFOLD_DOCUMENTS = {
+    "README.md", "AGENTS.md", "CONTRIBUTING.md", "EXECUTION-PLAN.md",
+    "docs/engineering/repository-layout.md", "docs/engineering/agent-playbook.md",
+    "docs/deployment-ownership-support-matrix.md",
+    "docs/dev-identity-pilot.md",
+    *(f"{area}/README.md" for area in SCAFFOLD_AREAS),
+}
+MARKDOWN_LINK_RE = re.compile(r"(?<!!)\[[^\]\n]+\]\(([^)\n]+)\)")
 
 REQUIRED_FILES = [
     "README.md",
@@ -24,6 +45,7 @@ REQUIRED_FILES = [
     ".github/ISSUE_TEMPLATE/package-work.yml",
     ".github/PULL_REQUEST_TEMPLATE.md",
     "docs/deployment-ownership-support-matrix.md",
+    "docs/dev-identity-pilot.md",
 ]
 
 PORTABLE_FOUNDATION_FILES = [
@@ -51,6 +73,10 @@ STALE_NO_DEPLOYMENT_CLAIMS = [
     "No cloud resources have been deployed.",
     "No Fabric or Azure resources have been deployed.",
     "No deployment has been qualified",
+    "remain #8 gates",
+    "acceptance gates in #8/#9",
+    "PC delivers CI and minimal deploy",
+    "| PC / Release and CI/CD engineer |",
 ]
 
 
@@ -93,6 +119,7 @@ def check_stale_deployment_claims(root: Path) -> list[str]:
         "README.md",
         "EXECUTION-PLAN.md",
         "docs/deployment-ownership-support-matrix.md",
+        "docs/dev-identity-pilot.md",
     ):
         text = read_repo_text(root, relative_path)
         for phrase in STALE_NO_DEPLOYMENT_CLAIMS:
@@ -180,7 +207,7 @@ def check_deployment_matrix(root: Path) -> list[str]:
     matrix = read_repo_text(root, "docs/deployment-ownership-support-matrix.md")
     required_phrases = [
         "Cloud deployment workflows are intentionally unimplemented",
-        "Issue #8 must remain open",
+        "Issue #8 is closed for the merged foundation",
         "unattended deployment pilot",
         "BLOCKED",
         "approved unattended deployment identity and permissions",
@@ -197,6 +224,132 @@ def check_deployment_matrix(root: Path) -> list[str]:
     ]
 
 
+def markdown_prose(text: str) -> str:
+    lines: list[str] = []
+    fence = ""
+    for line in text.splitlines():
+        marker = re.match(r"^\s{0,3}(`{3,}|~{3,})", line)
+        if marker:
+            token = marker.group(1)
+            if not fence:
+                fence = token
+            elif token[0] == fence[0] and len(token) >= len(fence):
+                fence = ""
+            continue
+        if not fence:
+            lines.append(line)
+    return re.sub(r"(`+).*?\1", "", "\n".join(lines))
+
+
+def markdown_anchors(text: str) -> set[str]:
+    anchors: set[str] = set()
+    for line in markdown_prose(text).splitlines():
+        heading = re.match(r"^ {0,3}#{1,6}\s+(.+?)(?:\s+#+)?$", line)
+        if heading:
+            slug = re.sub(r"[^\w\- ]", "", heading.group(1).lower()).replace(" ", "-")
+            anchor = slug
+            suffix = 0
+            while anchor in anchors:
+                suffix += 1
+                anchor = f"{slug}-{suffix}"
+            anchors.add(anchor)
+    return anchors
+
+
+def check_local_links(root: Path, document: str) -> list[str]:
+    errors: list[str] = []
+    source = root / document
+    text = source.read_text(encoding="utf-8")
+    for match in MARKDOWN_LINK_RE.finditer(markdown_prose(text)):
+        target = match.group(1)
+        try:
+            url = urlsplit(target)
+        except ValueError:
+            errors.append(f"{document}: invalid navigation link: {target}")
+            continue
+        if url.scheme in {"http", "https", "mailto"}:
+            continue
+        if url.scheme or url.netloc or url.path.startswith(("/", "\\")):
+            errors.append(f"{document}: unsupported navigation link: {target}")
+            continue
+        destination = (source.parent / unquote(url.path)).resolve() if url.path else source.resolve()
+        if not destination.is_relative_to(root.resolve()):
+            errors.append(f"{document}: navigation link escapes repository: {target}")
+        elif not destination.is_file():
+            errors.append(f"{document}: missing navigation target: {target}")
+        elif url.fragment:
+            if destination.suffix.lower() != ".md":
+                errors.append(f"{document}: fragment requires a Markdown target: {target}")
+            elif unquote(url.fragment) not in markdown_anchors(
+                destination.read_text(encoding="utf-8")
+            ):
+                errors.append(f"{document}: missing heading fragment: {target}")
+    return errors
+
+
+def check_scaffold(root: Path) -> list[str]:
+    try:
+        inventory = json.loads(read_repo_text(root, SCAFFOLD_INVENTORY))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        return [f"{SCAFFOLD_INVENTORY}: cannot read inventory: {error}"]
+    if (
+        not isinstance(inventory, dict)
+        or set(inventory) != {"version", "documents"}
+        or type(inventory["version"]) is not int
+        or inventory["version"] != 1
+        or not isinstance(inventory["documents"], list)
+    ):
+        return [f"{SCAFFOLD_INVENTORY}: expected version 1 and a documents list"]
+
+    errors: list[str] = []
+    seen: set[str] = set()
+    for index, entry in enumerate(inventory["documents"]):
+        label = f"{SCAFFOLD_INVENTORY}: documents[{index}]"
+        if not isinstance(entry, dict) or set(entry) != {"path", "purpose", "issues", "status"}:
+            errors.append(f"{label}: expected path, purpose, issues and status")
+            continue
+        path = entry["path"]
+        if (
+            not isinstance(path, str)
+            or not path
+            or "\\" in path
+            or ":" in path
+            or PurePosixPath(path).is_absolute()
+            or ".." in PurePosixPath(path).parts
+            or str(PurePosixPath(path)) != path
+            or not path.endswith(".md")
+        ):
+            errors.append(f"{label}: expected a safe repository-relative Markdown path")
+            continue
+        if path in seen:
+            errors.append(f"{label}: duplicate document path: {path}")
+            continue
+        seen.add(path)
+        if not isinstance(entry["purpose"], str) or not entry["purpose"].strip():
+            errors.append(f"{label}: purpose must be nonempty text")
+        if (
+            not isinstance(entry["issues"], list)
+            or not entry["issues"]
+            or any(type(issue) is not int or issue <= 0 for issue in entry["issues"])
+        ):
+            errors.append(f"{label}: issues must be positive integer issue numbers")
+        if entry["status"] not in ("implemented", "partial", "reserved"):
+            errors.append(f"{label}: status must be implemented, partial or reserved")
+        destination = (root / path).resolve()
+        if not destination.is_relative_to(root.resolve()):
+            errors.append(f"{label}: document escapes repository: {path}")
+        elif not destination.is_file():
+            errors.append(f"{label}: missing scaffold document: {path}")
+        else:
+            try:
+                errors.extend(check_local_links(root, path))
+            except (OSError, UnicodeError) as error:
+                errors.append(f"{path}: cannot read navigation document: {error}")
+    for path in sorted(SCAFFOLD_DOCUMENTS - seen):
+        errors.append(f"{SCAFFOLD_INVENTORY}: missing required document entry: {path}")
+    return errors
+
+
 def run_checks(root: Path | None = None) -> list[str]:
     root = root or repo_root()
     errors: list[str] = []
@@ -209,6 +362,7 @@ def run_checks(root: Path | None = None) -> list[str]:
     errors.extend(check_internal_sibling_not_copied(root))
     errors.extend(check_portable_foundation_text(root))
     errors.extend(check_deployment_matrix(root))
+    errors.extend(check_scaffold(root))
     return errors
 
 

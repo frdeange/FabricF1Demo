@@ -3,6 +3,13 @@
 A Microsoft Fabric and managed-Rayfin demo for a Grand Prix promoter and fan
 experience.
 
+## Repository navigation
+
+Use the [repository map and naming rules](docs/engineering/repository-layout.md)
+to find applications, source packages, infrastructure, native Fabric definitions,
+deployment contracts, scripts and tests. Planned areas have documented directories,
+not fictional implementations. Start changes with [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Project status
 
 The approved design is tracked in the [English execution plan](EXECUTION-PLAN.md)
@@ -14,8 +21,10 @@ owner handoff records a separately approved Terraform deployment of
 `f1-dev` and `f1-pro` on that capacity. The capacity was Active at verification;
 this is historical evidence, not a fresh live-state check. `f1-pro` is a stable
 demo workspace, not production. The handoff and Terraform changes remain
-uncommitted on the separate #3 branch; the CI foundation remains on the
-unmerged #8 branch, not `main`.
+uncommitted on the separate #3 branch according to that handoff. The validation
+CI foundation and read-only DEV identity pilot are merged into `main` through
+[PR #17](https://github.com/frdeange/FabricF1Demo/pull/17); issue #8 is closed.
+That issue state does not qualify unattended deployment.
 
 Infrastructure deployment does not qualify workloads or unattended deployment.
 Fabric Apps/Rayfin, workload identities and permissions, applicable licensing,
