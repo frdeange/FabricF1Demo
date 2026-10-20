@@ -1,0 +1,89 @@
+name: Package work
+description: Track a bounded implementation package with explicit evidence and gates.
+title: "📦 P?: "
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
+      description: What user-visible or repository-visible result should this package deliver?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: In scope
+      description: List the bounded work items for this package.
+      placeholder: |
+        - ...
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: List adjacent work that must not be done in this package.
+      placeholder: |
+        - ...
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and approvals
+      description: Identify required issues, resources, identities, budgets, tenant settings, or external rights.
+      placeholder: |
+        - Approved target workspace: pending
+        - Approved deployment identity: pending
+    validations:
+      required: true
+  - type: textarea
+    id: agent-model
+    attributes:
+      label: Agent role and recommended model
+      description: Define the bounded specialist role, exact available model identifier, effort, rationale, and escalation trigger. Do not assign an agent if direct work is simpler.
+      placeholder: |
+        - Role:
+        - Model / effort:
+        - Rationale:
+        - Escalate if:
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Use objective checks and evidence that a reviewer can verify.
+      placeholder: |
+        - [ ] ...
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation evidence
+      description: Commands, logs, screenshots, or clean-runner results expected before closure.
+      placeholder: |
+        - Command:
+        - Result:
+    validations:
+      required: true
+  - type: textarea
+    id: disclosure
+    attributes:
+      label: Disclosure and data safety
+      description: Confirm the package excludes secrets, tenant details, internal source material, and licensed data unless explicitly approved.
+      placeholder: |
+        - Public-safe repository content only.
+    validations:
+      required: true
+  - type: textarea
+    id: review-gate
+    attributes:
+      label: Pre-PR review gate
+      description: State who must independently review the package and what explicit user approval is needed before opening a PR.
+      placeholder: |
+        - Independent review:
+        - User approval before PR:
+    validations:
+      required: true

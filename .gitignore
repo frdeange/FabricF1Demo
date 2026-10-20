@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+node_modules/
+dist/
+coverage/
+
+# Local credentials and generated environment files
+.env
+.env.*
+!.env.example
+!.env.*.example
+local.settings.json
+rayfin/.deployments.json
+
+# Infrastructure state and local provider data
+.terraform/
+*.tfstate
+*.tfstate.*
