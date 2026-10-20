@@ -1,14 +1,19 @@
 # Deployment ownership and support matrix
 
-The #8 foundation provides local and GitHub Actions validation only. Cloud deployment workflows are intentionally unimplemented. Separately, the existing [#3](https://github.com/frdeange/FabricF1Demo/issues/3) owner handoff records a separately approved four-resource Terraform deployment: `rg-f1demo-swc`, F2 `f1democapswc` in Sweden Central, and `f1-dev` / `f1-pro` on that capacity. The capacity was Active at verification; this is not a fresh live-state check. The handoff and infrastructure changes remain uncommitted on the #3 branch; the validation foundation is unmerged on #8, not `main`.
+The #8 foundation provides local and GitHub Actions validation plus a manual read-only DEV identity pilot. Cloud deployment workflows are intentionally unimplemented. The foundation and pilot are merged into `main` through [PR #17](https://github.com/frdeange/FabricF1Demo/pull/17); issue #8 is closed. Separately, the existing [#3](https://github.com/frdeange/FabricF1Demo/issues/3) owner handoff records a separately approved four-resource Terraform deployment: `rg-f1demo-swc`, F2 `f1democapswc` in Sweden Central, and `f1-dev` / `f1-pro` on that capacity. The capacity was Active at verification; this is not a fresh live-state check. The handoff records infrastructure changes uncommitted on the separate #3 branch; this scaffold does not inspect or change that delivery.
 
 Infrastructure deployment does not qualify workloads or unattended deployment. `f1-pro` is a stable demo workspace, not production. No additional infrastructure, budgets, autopause or autoscale are configured; F4 requires separate approval. Do not add a deploy workflow or change resources from this alignment.
 
-## Issue #8 closure gate
+## Deployment qualification beyond the closed foundation
 
-Issue #8 must remain open after this foundation slice. It can close only after an unattended deployment pilot from a clean runner proves the approved revision against the approved DEV target, repeats without duplicating items or resetting data, and records drift handling. Current cloud deploy acceptance is **BLOCKED** on an approved unattended deployment identity and permissions, protected state, coordination and recovery for infrastructure, and a qualified clean-runner test. The existing bootstrap targets are not wholly unapproved; they are also not evidence of workload or unattended readiness. Confirm scope, cost and rollback separately for any future pilot.
+Issue #8 is closed for the merged foundation; this is not unattended deployment acceptance. A future unattended deployment pilot from a clean runner must prove the approved revision against the approved DEV target, repeat without duplicating items or resetting data, and record drift handling. Current cloud deploy acceptance is **BLOCKED** on an approved unattended deployment identity and permissions, protected state, coordination and recovery for infrastructure, and a qualified clean-runner test. The manual read-only identity pilot does not prove those write operations. The existing bootstrap targets are not wholly unapproved; they are also not evidence of workload or unattended readiness. Confirm scope, cost and rollback separately for any future pilot.
 
 ## Principles
+
+The closed #8 issue is foundation evidence, not the owner of future deployment
+execution. Routine deployment/orchestration has no assigned follow-up issue yet;
+assign a bounded package before starting it. Coordinate infrastructure readiness
+with #3 and app/runtime qualification with #9 without transferring their ownership.
 
 - One writer per artifact and destination. Do not mix Git sync, fabric-cicd, Rayfin CLI, REST updates, manual portal edits, and migrations against the same target without a documented owner.
 - Prefer OIDC/federated identity for GitHub Actions when the target APIs support it, scoped to the repository and environment. Persistent secrets require explicit approval, minimum scope, rotation, and storage in approved GitHub Environments or a vault.

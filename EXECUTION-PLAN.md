@@ -2,11 +2,11 @@
 
 ## Status and objective
 
-The plan is approved by the user. P0 created the public repository `frdeange/FabricF1Demo` on `main`, the English roadmap issue [#1](https://github.com/frdeange/FabricF1Demo/issues/1), and linked package issues #2–#15. The validation-only CI foundation for issue [#8](https://github.com/frdeange/FabricF1Demo/issues/8) is committed on branch `8-ci-cd-foundation`: initial foundation `1455a224`, then status alignment `61bd6a2`; the recorded GitHub Actions runs passed. This foundation is not merged into `main`.
+The plan is approved by the user. P0 created the public repository `frdeange/FabricF1Demo` on `main`, the English roadmap issue [#1](https://github.com/frdeange/FabricF1Demo/issues/1), and linked package issues #2–#15. The validation CI foundation and read-only DEV identity pilot for issue [#8](https://github.com/frdeange/FabricF1Demo/issues/8) are merged into `main` through [PR #17](https://github.com/frdeange/FabricF1Demo/pull/17), merge `640f38f`. Issue #8 is closed; unattended deployment qualification remains pending. Historical implementation branch: `8-ci-cd-foundation`.
 
 The existing issue [#3](https://github.com/frdeange/FabricF1Demo/issues/3) owner handoff records a separately approved four-resource Terraform deployment: `rg-f1demo-swc`, F2 capacity `f1democapswc` in Sweden Central, and workspaces `f1-dev` and `f1-pro` on that capacity. It records four creates, no changes or deletions, and a no-change post-apply plan. The capacity was Active at verification. This is historical evidence, not a fresh live-state check. The #3 handoff and infrastructure changes remain uncommitted on `3-execution-environment`, separate from the #8 branch.
 
-Infrastructure deployment does not qualify workloads or unattended deployment. Fabric Apps/Rayfin, workload identities and permissions, applicable licensing, and F2 workload fitness remain unqualified. Terraform uses one external local state; protected state, coordination, recovery and clean-runner authentication remain #8 blockers, not work implemented here. `f1-pro` is a stable demo workspace, not production. No additional infrastructure, budgets, autopause or autoscale are configured; F4 requires separate approval. Issues #3 and #8 remain open. This status update authorizes no cloud operation.
+Infrastructure deployment does not qualify workloads or unattended deployment. Fabric Apps/Rayfin, workload identities and permissions, applicable licensing, and F2 workload fitness remain unqualified. Terraform uses one external local state; protected state, coordination, recovery and clean-runner deployment qualification remain pending beyond the closed #8 foundation, not work implemented here. `f1-pro` is a stable demo workspace, not production. No additional infrastructure, budgets, autopause or autoscale are configured; F4 requires separate approval. Issue #3 remains open. This status update authorizes no cloud operation.
 
 Review after feedback: GitHub is the source of truth, and GitHub Actions orchestrates CI/CD from the first delivery; manual deployments must not be the normal route. Additional review: all partner-shareable deliverables and GitHub traceability are in English; specialized agents and model/effort choices are defined per phase, favoring capability without using oversized models or high reasoning for mechanical tasks.
 
@@ -296,7 +296,7 @@ Start with the most uncertain source and one vertical journey before deploying m
 | ID | Delivery | Issue | Dependencies | Output and gate to advance |
 | --- | --- | --- | --- | --- |
 | P0 | Preparation and execution agreements | [#3](https://github.com/frdeange/FabricF1Demo/issues/3) | Plan approval | Repository conventions and approved Terraform bootstrap recorded; reconcile evidence and retain workload, identity, licensing and capacity-fit gates before declaring readiness. Issue remains open |
-| PC | CI/CD foundation | [#8](https://github.com/frdeange/FabricF1Demo/issues/8) | P0 | Branch/PR CI and Actions workflows for provision/deployment, support matrix, unattended auth, and environment configuration; repeatable minimal deployment from a runner |
+| PC | CI/identity foundation (completed) | [#8](https://github.com/frdeange/FabricF1Demo/issues/8) | P0 | Merged branch/PR validation, support matrix and manual read-only identity pilot. Deployment and repeat-deployment qualification are not delivered by this closed issue |
 | P1 | Contracts and scenarios | [#5](https://github.com/frdeange/FabricF1Demo/issues/5) | P0 | Models, states, master data, and data manifest; four journeys described with verifiable inputs and outputs |
 | P2 | Deployed Rayfin feasibility | [#9](https://github.com/frdeange/FabricF1Demo/issues/9) | PC, P1 | Two minimal items deployed from GitHub Actions, SSO/permissions, a single order visible across apps, Fabric read, and temporal consumption proven in browser; allowed version/path recorded |
 | P3 | Oracle and Salesforce sources | [#2](https://github.com/frdeange/FabricF1Demo/issues/2) | P1, P2 | Real sources seeded, mappings and deltas qualified; Oracle insert/update/delete and supported CRM deletion/inactivation handling verified |
@@ -309,6 +309,8 @@ Start with the most uncertain source and one vertical journey before deploying m
 | PA | SAP Plan A adapter | [#15](https://github.com/frdeange/FabricF1Demo/issues/15) | P1, P2 and SAP environment/license available | Real processes via supported API, qualified ingestion, reconciliation, and reconstruction; switch A/B without rebuilding frontends |
 | P10 | Integration and reconstruction | [#13](https://github.com/frdeange/FabricF1Demo/issues/13) | P7, P8; P9 if enabled; live needed to accept live | Four complete journeys, no leaks/duplicates, measured performance, rebuild from Actions and a known Git revision; DEV/DEMO promotion rehearsed and evidenced |
 | P11 | Review and delivery | [#12](https://github.com/frdeange/FabricF1Demo/issues/12) | P10 | Independent review, verified fixes, user review package, and mandatory pause before PR |
+
+The remaining routine deployment/orchestration work has no assigned follow-up issue yet. Assign a bounded deployment package before executing it; do not treat the closed #8 foundation as its owner. P2 (#9) retains app/runtime qualification; P0 (#3) retains readiness and infrastructure coordination. Protected state, recovery, per-operation unattended authorization, repeatability and drift gates remain mandatory.
 
 P3/P4/P5 can be split by contracts after P2. P7 and P8 are independent from each other once their dependencies are published. Do not wait for PA to deliver B. Do not mark requested live as complete if only replay was tested. P9 is conditional: if not enabled, record the limitation and agree scope instead of presenting a simulated assistant as a native agent. Do not parallelize heavy Spark/BPS work without checking capacity headroom.
 
@@ -326,7 +328,7 @@ P3/P4/P5 can be split by contracts after P2. P7 and P8 are independent from each
 
 | Surface | Initial proposed tool | Boundary and condition |
 | --- | --- | --- |
-| Existing resource group, Fabric capacity and workspaces | Terraform under #3 ownership, with one external local state | No competing writer, second active state or blind empty-state apply. Shared-state protection, recovery and unattended execution remain #8 gates |
+| Existing resource group, Fabric capacity and workspaces | Terraform under #3 ownership, with one external local state | No competing writer, second active state or blind empty-state apply. Shared-state protection, recovery and unattended execution require #3 coordination and an assigned deployment follow-up package before execution |
 | Future Oracle/gateway/worker/storage/network resources | Tooling and scope not selected by this alignment | No additional infrastructure is approved; agree ownership, resources, roles, cost and rollback separately |
 | Fabric connections and non-Terraform-owned bindings | Manifests and supported REST/CLI, idempotent | Do not re-own the Terraform workspaces. Separate privileged bootstrap from routine deployment; check SP support per operation |
 | Supported Fabric definitions | fabric-cicd with fixed version and explicit scope | Validate type and properties; deploy dependencies and verify rebinding, not copy DEV IDs |
@@ -337,9 +339,9 @@ P3/P4/P5 can be split by contracts after P2. P7 and P8 are independent from each
 
 Current fabric-cicd documentation lists Lakehouse, Notebook, DataPipeline, Warehouse, Eventhouse/Eventstream, MirroredDatabase, Ontology, DataAgent, and other types; it does not list Rayfin AppBackend or the BPS launcher as supported types. Therefore fabric-cicd is not presented as a universal deployer.
 
-Its publishes are full-scope, not based only on a Git diff: choose item-specific directories/types and exclude children managed by Rayfin/BPS. Do not run unpublish_all_orphan_items as automatic cleanup. PC records by type/operation and version: export/create/update, supported identity, dependencies, connections, rebinding, manual steps, and reconstruction test. The documentation list does not replace a test in this tenant.
+Its publishes are full-scope, not based only on a Git diff: choose item-specific directories/types and exclude children managed by Rayfin/BPS. Do not run unpublish_all_orphan_items as automatic cleanup. The future deployment package must record by type/operation and version: export/create/update, supported identity, dependencies, connections, rebinding, manual steps, and reconstruction test. The documentation list does not replace a test in this tenant.
 
-The Rayfin 1.36.2 guide documents non-interactive SP login and pre-acquired token RAYFIN_TOKEN, as well as explicit workspace destinations. Federated authentication will be tested in PC/P2 before promising end-to-end support. Never allow a runner without a destination to create a workspace/trial by default.
+The Rayfin 1.36.2 guide documents non-interactive SP login and pre-acquired token RAYFIN_TOKEN, as well as explicit workspace destinations. The future deployment package and P2 must test per-operation federated authentication before promising end-to-end support; the completed read-only pilot is not that proof. Never allow a runner without a destination to create a workspace/trial by default.
 
 Native AppBackend promotion is documented for compiled artifacts, but in that version it excludes functions and secrets. Do not use it as a shortcut that makes the whole app appear promoted. Recommended start: Actions and full CLI by environment from the same locked revision, recording the resulting artifacts. Do not claim binary identity between builds per environment if the CLI rebuilds. Resolve auth configuration and coordinates at runtime through the documented path to avoid DEMO consulting or authenticating against DEV.
 
@@ -365,7 +367,7 @@ In a native Git flow, validate tenant switches, configured GitHub credential, cu
 | seed-demo.yml | Manual, explicit scenario and environment; idempotent fictional data, manifest, and reconciliation; no implicit charges or deletions |
 | verify.yml | Read-only: app health, permissions, sources/freshness, schema, and drift; reports without secrets |
 
-The split can be implemented with reusable workflows to avoid duplicating steps. Do not create all of them as empty skeletons: PC delivers CI and minimal deploy; the others appear when their real capability exists.
+The split can be implemented with reusable workflows to avoid duplicating steps. Do not create all of them as empty skeletons: the closed PC foundation delivered validation CI and a read-only identity pilot, not minimal deployment. Deployment workflows require an assigned follow-up package; others appear when their real capability exists.
 
 Do not make the user’s pre-PR review depend on a pull_request workflow: the authorized branch preview lets the gate be satisfied before opening a PR. No workflow merges PRs automatically or skips user approval.
 
@@ -391,10 +393,13 @@ Technical smoke under SP does not replace isolation tests with real Entra users.
 
 ### Proposed code structure
 
-In the agreed repository, not in this non-Git folder by default:
+The implemented [repository map and naming contract](docs/engineering/repository-layout.md)
+and [scaffold inventory](docs/engineering/scaffold-inventory.json) refine this
+original proposal. Reserved folders document purpose and ownership, not completed
+workloads; established contracts/scenarios and active package paths stay stable.
 
 - apps\\hub and apps\\fan: independent Rayfin projects, both from blankapp.
-- packages\\contracts: shared types and validations, with no visual dependencies.
+- packages\\contracts: future application bindings/types, with no visual dependencies; authoritative business JSON remains under contracts.
 - sources\\oracle, sources\\salesforce, sources\\sap, and sources\\sports.
 - fabric: ingestion, processing, projections, and native definitions.
 - infra and scripts: provisioning, preflight, and idempotent reconstruction.
@@ -440,7 +445,8 @@ These are bounded role definitions, not a request to launch an agent for every r
 | --- | --- | --- | --- |
 | P0 / Platform readiness | fabric-skills:FabricAdmin | gpt-5.4 / medium | Inventory approved capacity/workspaces, tenant prerequisites, access, and cost constraints; report readiness without granting permissions autonomously |
 | P1 / Domain and contract architect | general-purpose | gpt-5.5 / high | Canonical keys, state machines, money/refund semantics, ownership, and four journeys; executable contracts and deterministic scenario manifest |
-| PC / Release and CI/CD engineer | general-purpose | gpt-5.5 / high initially | Actions, OIDC, deployment ownership, environment isolation, and support matrix; repeatable unattended deployment from a clean runner |
+| PC / CI and read-only identity foundation (completed #8) | general-purpose | Historical recommendation; no new assignment | Merged validation CI, ownership/support matrix and manual read-only OIDC pilot; does not accept unattended deployment |
+| Deployment follow-up / Release engineer (unassigned) | Not assigned; select when package is scoped | Reassess available model/effort when package is scoped | Requires a bounded issue before execution: per-operation identity, environment isolation, state/recovery coordination and repeatable unattended deployment from a clean runner |
 | P2 / Rayfin identity and application architect | fabric-skills:FabricAppDev | gpt-5.5 / high | Two deployed Rayfin items, authorization, shared operational record, runtime identity, and Fabric reads; real browser and backend evidence |
 | P3 / Oracle and Salesforce integration engineer | fabric-skills:FabricDataEngineer | gpt-5.5 / medium | Source schemas, idempotent fictional seeds, keys and ingestion/CDC; source-to-Fabric delta reconciliation, not direct Gold seeding |
 | P4 / SAP scenario and integration engineer | fabric-skills:FabricDataEngineer | gpt-5.5 / medium | Plan B business documents, accounting invariants, and native ingestion pilot; provenance, reconciliation, and no claim of a connected ERP |
@@ -471,7 +477,7 @@ Each assignment has an issue and reference revision, bounded objective, inputs, 
 
 FabricAppDev receives the managed Rayfin constraint and the versioned documentation/skill corresponding to it; it does not replace that hosting with another stack. FabricDataEngineer uses the proprietary skills of each endpoint. The P9 specialist uses ontology/model-authoring skills, not a BI question-answer agent pretending to be an ontology author.
 
-PC/P2 form a vertical pilot: they may share implementer and context so the same authentication is not investigated twice. Afterwards, P3/P4/P5 can move in parallel by contracts and with capacity awareness. P7/P8 can be split between two agents with separate files once P6 is available. P9 starts only when the native capability is qualified.
+The future deployment package and P2 form a vertical pilot: they may share implementer and context so the same authentication is not investigated twice; reuse the completed PC evidence without inferring write support. Afterwards, P3/P4/P5 can move in parallel by contracts and with capacity awareness. P7/P8 can be split between two agents with separate files once P6 is available. P9 starts only when the native capability is qualified.
 
 The coordinator integrates and verifies; it does not reassign the same investigation to another agent. P11 is independent of implementation. The reviewer lists verifiable findings or explicitly says that no problems were found; do not confuse a change summary with an independent review. Do not launch an agent per module, a full fleet, or massive workflows by default.
 
@@ -501,7 +507,7 @@ The roadmap is not authorization to start every issue. Keep a single active deli
 | --- | --- | --- |
 | Repository and publication scope | Public repository and roadmap/issues now exist; implementation is beginning | Preserve public-content boundaries; do not publish internal references |
 | Bootstrap evidence and remaining workload readiness | #3 records deployed targets, region/quota and approved bootstrap-spend evidence; Rayfin, licensing and shared F2 workload fit remain unqualified | Preserve the bootstrap evidence without claiming workload readiness. Budget controls are not configured; future spend/access changes and workload enablement require separate approval |
-| CI/CD by type and unattended authentication | Support documented partially, not qualified in tenant/runner | Gate PC/P2, per-operation matrix, OIDC where it works, and manual bootstrap declared where needed |
+| CI/CD by type and unattended authentication | Read-only identity foundation merged; deployment support not qualified in tenant/runner | Assign a deployment follow-up package before execution, coordinate #3/#9, and retain per-operation matrix, OIDC qualification and declared manual bootstrap |
 | Operational persistence between two items | No concrete path proven | Mandatory P2 gate; if it fails, resolve before P3-P8 |
 | SAP Plan A source and test/demo rights | Cannot promise a real connected ERP | Advance through Plan B and prepare PA without pretending availability |
 | Plan B BPS input and processing | Worked in the reference, not proven here | Pilot before scaling data or claiming native ingestion |

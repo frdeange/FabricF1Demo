@@ -73,6 +73,7 @@ class RepositoryValidationTests(unittest.TestCase):
             "README.md",
             "EXECUTION-PLAN.md",
             "docs/deployment-ownership-support-matrix.md",
+            "docs/dev-identity-pilot.md",
         )
         for document in documents:
             for claim in validate_repo.STALE_NO_DEPLOYMENT_CLAIMS:

@@ -51,5 +51,8 @@ fallback or expand permissions to make the check pass.
 This proves only federated authentication and one workspace metadata read.
 Rayfin CLI compatibility, per-operation permissions, workload fitness,
 deployment, repeat deployment, runtime authorization and shared application
-persistence remain separate acceptance gates in #8/#9. Infrastructure automation
-also remains blocked on its accepted state/coordination/recovery debt.
+persistence remain separate acceptance gates: #9 owns app/runtime qualification,
+and routine deployment requires an assigned follow-up package before execution.
+The closed #8 foundation does not own pending deployment work. Infrastructure
+automation requires #3 coordination and remains blocked on its accepted
+state/coordination/recovery debt.
