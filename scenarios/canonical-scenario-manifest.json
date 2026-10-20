@@ -139,14 +139,60 @@
       "dataOrigin": "synthetic-only"
     },
     "prices": [
-      { "priceKey": "PRICE-SYN-REPLAY-01", "productKey": "PRD-SYN-REPLAY-01", "amountMinor": 5000, "currency": "USD", "recordState": "active", "effectiveFrom": "2030-01-01T00:00:00Z", "effectiveTo": "2031-01-01T00:00:00Z", "taxTreatment": "not_applicable" },
-      { "priceKey": "PRICE-SYN-LIVE-01", "productKey": "PRD-SYN-LIVE-01", "amountMinor": 7500, "currency": "USD", "recordState": "active", "effectiveFrom": "2030-01-01T00:00:00Z", "effectiveTo": "2031-01-01T00:00:00Z", "taxTreatment": "not_applicable" },
-      { "priceKey": "PRICE-SYN-HOSP-01", "productKey": "PRD-SYN-HOSP-01", "amountMinor": 100000, "currency": "USD", "recordState": "active", "effectiveFrom": "2030-01-01T00:00:00Z", "effectiveTo": "2031-01-01T00:00:00Z", "taxTreatment": "not_applicable" },
-      { "priceKey": "PRICE-SYN-WEEKEND-01", "productKey": "PRD-SYN-WEEKEND-01", "amountMinor": 105000, "currency": "USD", "recordState": "active", "effectiveFrom": "2030-01-01T00:00:00Z", "effectiveTo": "2031-01-01T00:00:00Z", "taxTreatment": "not_applicable" }
+      {
+        "priceKey": "PRICE-SYN-REPLAY-01",
+        "productKey": "PRD-SYN-REPLAY-01",
+        "amountMinor": 5000,
+        "currency": "USD",
+        "recordState": "active",
+        "effectiveFrom": "2030-01-01T00:00:00Z",
+        "effectiveTo": "2031-01-01T00:00:00Z",
+        "taxTreatment": "not_applicable"
+      },
+      {
+        "priceKey": "PRICE-SYN-LIVE-01",
+        "productKey": "PRD-SYN-LIVE-01",
+        "amountMinor": 7500,
+        "currency": "USD",
+        "recordState": "active",
+        "effectiveFrom": "2030-01-01T00:00:00Z",
+        "effectiveTo": "2031-01-01T00:00:00Z",
+        "taxTreatment": "not_applicable"
+      },
+      {
+        "priceKey": "PRICE-SYN-HOSP-01",
+        "productKey": "PRD-SYN-HOSP-01",
+        "amountMinor": 100000,
+        "currency": "USD",
+        "recordState": "active",
+        "effectiveFrom": "2030-01-01T00:00:00Z",
+        "effectiveTo": "2031-01-01T00:00:00Z",
+        "taxTreatment": "not_applicable"
+      },
+      {
+        "priceKey": "PRICE-SYN-WEEKEND-01",
+        "productKey": "PRD-SYN-WEEKEND-01",
+        "amountMinor": 105000,
+        "currency": "USD",
+        "recordState": "active",
+        "effectiveFrom": "2030-01-01T00:00:00Z",
+        "effectiveTo": "2031-01-01T00:00:00Z",
+        "taxTreatment": "not_applicable"
+      }
     ],
     "bundleComponents": [
-      { "bundleComponentKey": "BUNDLE-COMP-SYN-001", "bundleProductKey": "PRD-SYN-WEEKEND-01", "componentProductKey": "PRD-SYN-REPLAY-01", "quantity": 1 },
-      { "bundleComponentKey": "BUNDLE-COMP-SYN-002", "bundleProductKey": "PRD-SYN-WEEKEND-01", "componentProductKey": "PRD-SYN-HOSP-01", "quantity": 1 }
+      {
+        "bundleComponentKey": "BUNDLE-COMP-SYN-001",
+        "bundleProductKey": "PRD-SYN-WEEKEND-01",
+        "componentProductKey": "PRD-SYN-REPLAY-01",
+        "quantity": 1
+      },
+      {
+        "bundleComponentKey": "BUNDLE-COMP-SYN-002",
+        "bundleProductKey": "PRD-SYN-WEEKEND-01",
+        "componentProductKey": "PRD-SYN-HOSP-01",
+        "quantity": 1
+      }
     ],
     "products": [
       {
@@ -175,13 +221,30 @@
       }
     ],
     "drivers": [
-      { "driverKey": "DRV-SYN-01", "displayName": "Synthetic Driver One" },
-      { "driverKey": "DRV-SYN-02", "displayName": "Synthetic Driver Two" },
-      { "driverKey": "DRV-SYN-03", "displayName": "Synthetic Driver Three" }
+      {
+        "driverKey": "DRV-SYN-01",
+        "displayName": "Synthetic Driver One"
+      },
+      {
+        "driverKey": "DRV-SYN-02",
+        "displayName": "Synthetic Driver Two"
+      },
+      {
+        "driverKey": "DRV-SYN-03",
+        "displayName": "Synthetic Driver Three"
+      }
     ],
     "circuitZones": [
-      { "zoneKey": "ZONE-SYN-01", "displayName": "Synthetic Grandstand North", "capacity": 100 },
-      { "zoneKey": "ZONE-SYN-02", "displayName": "Synthetic Paddock", "capacity": 30 }
+      {
+        "zoneKey": "ZONE-SYN-01",
+        "displayName": "Synthetic Grandstand North",
+        "capacity": 100
+      },
+      {
+        "zoneKey": "ZONE-SYN-02",
+        "displayName": "Synthetic Paddock",
+        "capacity": 30
+      }
     ],
     "campaign": {
       "campaignKey": "CAMPAIGN-SYN-001",
@@ -339,90 +402,90 @@
     }
   ],
   "erpDocuments": [
-      {
-        "erpDocumentKey": "ERP-SYN-INV-FAN-001",
-        "documentType": "customer_invoice",
-        "amountMinor": 5000,
-        "currency": "USD",
-        "erpDocumentLineKey": "ERPL-SYN-001",
-        "lineQuantity": 1,
-        "lineNetMinor": 5000,
-        "lineTaxMinor": 0,
-        "lineGrossMinor": 5000,
-        "taxTreatment": "not_applicable",
-        "documentLinkKey": "LINK-SYN-FAN-INV-001",
-        "dataOrigin": "synthetic-only"
-      },
-      {
-        "erpDocumentKey": "ERP-SYN-INV-HOSP-001",
-        "documentType": "customer_invoice",
-        "amountMinor": 100000,
-        "currency": "USD",
-        "erpDocumentLineKey": "ERPL-SYN-002",
-        "lineQuantity": 1,
-        "lineNetMinor": 100000,
-        "lineTaxMinor": 0,
-        "lineGrossMinor": 100000,
-        "taxTreatment": "not_applicable",
-        "documentLinkKey": "LINK-SYN-HOSP-INV-001",
-        "dataOrigin": "synthetic-only"
-      },
-      {
-        "erpDocumentKey": "ERP-SYN-CM-FAN-001",
-        "documentType": "customer_credit_memo",
-        "amountMinor": 5000,
-        "currency": "USD",
-        "erpDocumentLineKey": "ERPL-SYN-003",
-        "lineQuantity": 1,
-        "lineNetMinor": 5000,
-        "lineTaxMinor": 0,
-        "lineGrossMinor": 5000,
-        "taxTreatment": "not_applicable",
-        "documentLinkKey": "LINK-SYN-FAN-CM-001",
-        "dataOrigin": "synthetic-only"
-      },
-      {
-        "erpDocumentKey": "ERP-SYN-INV-SPONSOR-001",
-        "documentType": "customer_invoice",
-        "amountMinor": 500000,
-        "currency": "USD",
-        "erpDocumentLineKey": "ERPL-SYN-004",
-        "lineQuantity": 1,
-        "lineNetMinor": 500000,
-        "lineTaxMinor": 0,
-        "lineGrossMinor": 500000,
-        "taxTreatment": "not_applicable",
-        "documentLinkKey": "LINK-SYN-SPONSOR-INV-001",
-        "dataOrigin": "synthetic-only"
-      },
-      {
-        "erpDocumentKey": "ERP-SYN-SUPPLIER-HOSP-001",
-        "documentType": "supplier_invoice",
-        "amountMinor": 25000,
-        "currency": "USD",
-        "erpDocumentLineKey": "ERPL-SYN-005",
-        "lineQuantity": 1,
-        "lineNetMinor": 25000,
-        "lineTaxMinor": 0,
-        "lineGrossMinor": 25000,
-        "taxTreatment": "not_applicable",
-        "documentLinkKey": "LINK-SYN-SUPPLIER-HOSP-001",
-        "dataOrigin": "synthetic-only"
-      },
-      {
-        "erpDocumentKey": "ERP-SYN-SUPPLIER-SPONSOR-001",
-        "documentType": "supplier_invoice",
-        "amountMinor": 10000,
-        "currency": "USD",
-        "erpDocumentLineKey": "ERPL-SYN-006",
-        "lineQuantity": 1,
-        "lineNetMinor": 10000,
-        "lineTaxMinor": 0,
-        "lineGrossMinor": 10000,
-        "taxTreatment": "not_applicable",
-        "documentLinkKey": "LINK-SYN-SUPPLIER-SPONSOR-001",
-        "dataOrigin": "synthetic-only"
-      }
+    {
+      "erpDocumentKey": "ERP-SYN-INV-FAN-001",
+      "documentType": "customer_invoice",
+      "amountMinor": 5000,
+      "currency": "USD",
+      "erpDocumentLineKey": "ERPL-SYN-001",
+      "lineQuantity": 1,
+      "lineNetMinor": 5000,
+      "lineTaxMinor": 0,
+      "lineGrossMinor": 5000,
+      "taxTreatment": "not_applicable",
+      "documentLinkKey": "LINK-SYN-FAN-INV-001",
+      "dataOrigin": "synthetic-only"
+    },
+    {
+      "erpDocumentKey": "ERP-SYN-INV-HOSP-001",
+      "documentType": "customer_invoice",
+      "amountMinor": 100000,
+      "currency": "USD",
+      "erpDocumentLineKey": "ERPL-SYN-002",
+      "lineQuantity": 1,
+      "lineNetMinor": 100000,
+      "lineTaxMinor": 0,
+      "lineGrossMinor": 100000,
+      "taxTreatment": "not_applicable",
+      "documentLinkKey": "LINK-SYN-HOSP-INV-001",
+      "dataOrigin": "synthetic-only"
+    },
+    {
+      "erpDocumentKey": "ERP-SYN-CM-FAN-001",
+      "documentType": "customer_credit_memo",
+      "amountMinor": 5000,
+      "currency": "USD",
+      "erpDocumentLineKey": "ERPL-SYN-003",
+      "lineQuantity": 1,
+      "lineNetMinor": 5000,
+      "lineTaxMinor": 0,
+      "lineGrossMinor": 5000,
+      "taxTreatment": "not_applicable",
+      "documentLinkKey": "LINK-SYN-FAN-CM-001",
+      "dataOrigin": "synthetic-only"
+    },
+    {
+      "erpDocumentKey": "ERP-SYN-INV-SPONSOR-001",
+      "documentType": "customer_invoice",
+      "amountMinor": 500000,
+      "currency": "USD",
+      "erpDocumentLineKey": "ERPL-SYN-004",
+      "lineQuantity": 1,
+      "lineNetMinor": 500000,
+      "lineTaxMinor": 0,
+      "lineGrossMinor": 500000,
+      "taxTreatment": "not_applicable",
+      "documentLinkKey": "LINK-SYN-SPONSOR-INV-001",
+      "dataOrigin": "synthetic-only"
+    },
+    {
+      "erpDocumentKey": "ERP-SYN-SUPPLIER-HOSP-001",
+      "documentType": "supplier_invoice",
+      "amountMinor": 25000,
+      "currency": "USD",
+      "erpDocumentLineKey": "ERPL-SYN-005",
+      "lineQuantity": 1,
+      "lineNetMinor": 25000,
+      "lineTaxMinor": 0,
+      "lineGrossMinor": 25000,
+      "taxTreatment": "not_applicable",
+      "documentLinkKey": "LINK-SYN-SUPPLIER-HOSP-001",
+      "dataOrigin": "synthetic-only"
+    },
+    {
+      "erpDocumentKey": "ERP-SYN-SUPPLIER-SPONSOR-001",
+      "documentType": "supplier_invoice",
+      "amountMinor": 10000,
+      "currency": "USD",
+      "erpDocumentLineKey": "ERPL-SYN-006",
+      "lineQuantity": 1,
+      "lineNetMinor": 10000,
+      "lineTaxMinor": 0,
+      "lineGrossMinor": 10000,
+      "taxTreatment": "not_applicable",
+      "documentLinkKey": "LINK-SYN-SUPPLIER-SPONSOR-001",
+      "dataOrigin": "synthetic-only"
+    }
   ],
   "expectedEntityCounts": {
     "Event": 1,
@@ -533,6 +596,1399 @@
       "Sponsor invoices are not commercial ticket/hospitality orders.",
       "The full credit is a scenario compensation and not a money refund.",
       "Supplier costs are separate from customer invoices and sponsorship fulfillment."
+    ]
+  },
+  "sourceSeed": {
+    "fixtureVersion": "1.0.0",
+    "sourceSchemaVersion": "1.0.0",
+    "seed": "f1-demo-contract-fixture-001",
+    "scenarioId": "synthetic-grand-prix-promoter-v1",
+    "scenarioVersion": "1.0.0",
+    "datasetId": "synthetic-gp-dataset-v1",
+    "sapPlan": "B",
+    "provenanceLabel": "synthetic-only",
+    "adapterQualification": {
+      "oracle": "logical-source-contract-only",
+      "salesforce": "logical-source-contract-only",
+      "sapPlanB": "synthetic-fixture-for-unqualified-fabric-native-pilot",
+      "sapPlanA": "not-started-conditional"
+    },
+    "idempotency": {
+      "upsertIdentityFields": [
+        "sourceSystem",
+        "sourceTenant",
+        "sourceEntity",
+        "sourceKey",
+        "scenarioId",
+        "scenarioVersion",
+        "datasetId",
+        "runVersion",
+        "schemaVersion"
+      ],
+      "sameVersionBehavior": "deterministic-upsert-noop",
+      "runVersionIsolation": {
+        "namespaceTemplate": "{scenarioId}:{scenarioVersion}:{datasetId}:{runVersion}",
+        "examples": [
+          {
+            "runVersion": "run-0001",
+            "namespace": "synthetic-grand-prix-promoter-v1:1.0.0:synthetic-gp-dataset-v1:run-0001"
+          },
+          {
+            "runVersion": "run-0002",
+            "namespace": "synthetic-grand-prix-promoter-v1:1.0.0:synthetic-gp-dataset-v1:run-0002"
+          }
+        ]
+      },
+      "deterministicRecordDigestSha256": "a2df9a383441e9a2cc8c0923a694cc991ad4ce459b535d74f50ebb79888a58d0"
+    },
+    "sourceSystems": [
+      {
+        "sourceSystem": "oracle",
+        "sourceTenant": "oracle-syn-tenant-01",
+        "schemaLabel": "ORACLE_PROMOTER_DEMO (illustrative logical schema label, not executable DDL)",
+        "records": [
+          {
+            "sourceSystem": "oracle",
+            "sourceTenant": "oracle-syn-tenant-01",
+            "sourceEntity": "OracleEvent",
+            "sourceKey": "OEVT-001",
+            "canonicalEntity": "Event",
+            "canonicalKey": "EVT-SYN-001",
+            "sourceUpdatedAt": "2030-06-01T09:00:00Z",
+            "ingestedAt": "2030-06-01T09:00:05Z",
+            "recordState": "seeded",
+            "journeys": [
+              "fan-purchase",
+              "hospitality-b2b",
+              "complaint-credit",
+              "sponsorship"
+            ],
+            "refs": {
+              "eventKey": "EVT-SYN-001"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "oracle",
+            "sourceTenant": "oracle-syn-tenant-01",
+            "sourceEntity": "OracleCircuitZone",
+            "sourceKey": "OZONE-001",
+            "canonicalEntity": "CircuitZone",
+            "canonicalKey": "ZONE-SYN-01",
+            "sourceUpdatedAt": "2030-06-01T09:01:00Z",
+            "ingestedAt": "2030-06-01T09:01:05Z",
+            "recordState": "seeded",
+            "journeys": [
+              "fan-purchase",
+              "hospitality-b2b"
+            ],
+            "refs": {
+              "eventSourceKey": "OEVT-001"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "oracle",
+            "sourceTenant": "oracle-syn-tenant-01",
+            "sourceEntity": "OracleCircuitZone",
+            "sourceKey": "OZONE-002",
+            "canonicalEntity": "CircuitZone",
+            "canonicalKey": "ZONE-SYN-02",
+            "sourceUpdatedAt": "2030-06-01T09:01:10Z",
+            "ingestedAt": "2030-06-01T09:01:15Z",
+            "recordState": "seeded",
+            "journeys": [
+              "hospitality-b2b",
+              "sponsorship"
+            ],
+            "refs": {
+              "eventSourceKey": "OEVT-001"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "oracle",
+            "sourceTenant": "oracle-syn-tenant-01",
+            "sourceEntity": "OracleCatalogProduct",
+            "sourceKey": "OPRD-REPLAY-01",
+            "canonicalEntity": "Product",
+            "canonicalKey": "PRD-SYN-REPLAY-01",
+            "sourceUpdatedAt": "2030-06-01T09:02:00Z",
+            "ingestedAt": "2030-06-01T09:02:05Z",
+            "recordState": "seeded",
+            "journeys": [
+              "fan-purchase",
+              "complaint-credit"
+            ],
+            "refs": {
+              "eventSourceKey": "OEVT-001",
+              "zoneSourceKey": "OZONE-001"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "oracle",
+            "sourceTenant": "oracle-syn-tenant-01",
+            "sourceEntity": "OracleCatalogProduct",
+            "sourceKey": "OPRD-HOSP-01",
+            "canonicalEntity": "Product",
+            "canonicalKey": "PRD-SYN-HOSP-01",
+            "sourceUpdatedAt": "2030-06-01T09:02:10Z",
+            "ingestedAt": "2030-06-01T09:02:15Z",
+            "recordState": "seeded",
+            "journeys": [
+              "hospitality-b2b"
+            ],
+            "refs": {
+              "eventSourceKey": "OEVT-001",
+              "zoneSourceKey": "OZONE-002"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "oracle",
+            "sourceTenant": "oracle-syn-tenant-01",
+            "sourceEntity": "OracleCatalogProduct",
+            "sourceKey": "OPRD-WEEKEND-01",
+            "canonicalEntity": "Product",
+            "canonicalKey": "PRD-SYN-WEEKEND-01",
+            "sourceUpdatedAt": "2030-06-01T09:02:20Z",
+            "ingestedAt": "2030-06-01T09:02:25Z",
+            "recordState": "seeded",
+            "journeys": [
+              "hospitality-b2b"
+            ],
+            "refs": {
+              "eventSourceKey": "OEVT-001",
+              "bundleComponentSourceKeys": [
+                "OBUNDLE-001",
+                "OBUNDLE-002"
+              ]
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "oracle",
+            "sourceTenant": "oracle-syn-tenant-01",
+            "sourceEntity": "OracleCatalogProduct",
+            "sourceKey": "OPRD-LIVE-01",
+            "canonicalEntity": "Product",
+            "canonicalKey": "PRD-SYN-LIVE-01",
+            "sourceUpdatedAt": "2030-06-01T09:02:30Z",
+            "ingestedAt": "2030-06-01T09:02:35Z",
+            "recordState": "seeded",
+            "journeys": [
+              "fan-purchase"
+            ],
+            "refs": {
+              "eventSourceKey": "OEVT-001",
+              "zoneSourceKey": "OZONE-001",
+              "availabilityReason": "unavailable-no-qualified-live-source"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "oracle",
+            "sourceTenant": "oracle-syn-tenant-01",
+            "sourceEntity": "OracleBundleComponent",
+            "sourceKey": "OBUNDLE-001",
+            "canonicalEntity": "BundleComponent",
+            "canonicalKey": "BUNDLE-COMP-SYN-001",
+            "sourceUpdatedAt": "2030-06-01T09:03:00Z",
+            "ingestedAt": "2030-06-01T09:03:05Z",
+            "recordState": "seeded",
+            "journeys": [
+              "hospitality-b2b"
+            ],
+            "refs": {
+              "bundleProductSourceKey": "OPRD-WEEKEND-01",
+              "componentProductSourceKey": "OPRD-REPLAY-01"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "oracle",
+            "sourceTenant": "oracle-syn-tenant-01",
+            "sourceEntity": "OracleBundleComponent",
+            "sourceKey": "OBUNDLE-002",
+            "canonicalEntity": "BundleComponent",
+            "canonicalKey": "BUNDLE-COMP-SYN-002",
+            "sourceUpdatedAt": "2030-06-01T09:03:10Z",
+            "ingestedAt": "2030-06-01T09:03:15Z",
+            "recordState": "seeded",
+            "journeys": [
+              "hospitality-b2b"
+            ],
+            "refs": {
+              "bundleProductSourceKey": "OPRD-WEEKEND-01",
+              "componentProductSourceKey": "OPRD-HOSP-01"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "oracle",
+            "sourceTenant": "oracle-syn-tenant-01",
+            "sourceEntity": "OraclePriceListEntry",
+            "sourceKey": "OPRICE-REPLAY-01",
+            "canonicalEntity": "Price",
+            "canonicalKey": "PRICE-SYN-REPLAY-01",
+            "sourceUpdatedAt": "2030-06-01T09:04:00Z",
+            "ingestedAt": "2030-06-01T09:04:05Z",
+            "recordState": "seeded",
+            "journeys": [
+              "fan-purchase",
+              "complaint-credit"
+            ],
+            "refs": {
+              "eventSourceKey": "OEVT-001",
+              "productSourceKey": "OPRD-REPLAY-01",
+              "amountMinor": 5000,
+              "currency": "USD",
+              "taxTreatment": "not_applicable"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "oracle",
+            "sourceTenant": "oracle-syn-tenant-01",
+            "sourceEntity": "OraclePriceListEntry",
+            "sourceKey": "OPRICE-HOSP-01",
+            "canonicalEntity": "Price",
+            "canonicalKey": "PRICE-SYN-HOSP-01",
+            "sourceUpdatedAt": "2030-06-01T09:04:10Z",
+            "ingestedAt": "2030-06-01T09:04:15Z",
+            "recordState": "seeded",
+            "journeys": [
+              "hospitality-b2b"
+            ],
+            "refs": {
+              "eventSourceKey": "OEVT-001",
+              "productSourceKey": "OPRD-HOSP-01",
+              "amountMinor": 100000,
+              "currency": "USD",
+              "taxTreatment": "not_applicable"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "oracle",
+            "sourceTenant": "oracle-syn-tenant-01",
+            "sourceEntity": "OraclePriceListEntry",
+            "sourceKey": "OPRICE-WEEKEND-01",
+            "canonicalEntity": "Price",
+            "canonicalKey": "PRICE-SYN-WEEKEND-01",
+            "sourceUpdatedAt": "2030-06-01T09:04:20Z",
+            "ingestedAt": "2030-06-01T09:04:25Z",
+            "recordState": "seeded",
+            "journeys": [
+              "hospitality-b2b"
+            ],
+            "refs": {
+              "eventSourceKey": "OEVT-001",
+              "productSourceKey": "OPRD-WEEKEND-01",
+              "amountMinor": 105000,
+              "currency": "USD",
+              "taxTreatment": "not_applicable"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "oracle",
+            "sourceTenant": "oracle-syn-tenant-01",
+            "sourceEntity": "OraclePriceListEntry",
+            "sourceKey": "OPRICE-LIVE-01",
+            "canonicalEntity": "Price",
+            "canonicalKey": "PRICE-SYN-LIVE-01",
+            "sourceUpdatedAt": "2030-06-01T09:04:30Z",
+            "ingestedAt": "2030-06-01T09:04:35Z",
+            "recordState": "seeded",
+            "journeys": [
+              "fan-purchase"
+            ],
+            "refs": {
+              "eventSourceKey": "OEVT-001",
+              "productSourceKey": "OPRD-LIVE-01",
+              "availabilityReason": "unavailable-no-qualified-live-source",
+              "amountMinor": 7500,
+              "currency": "USD",
+              "taxTreatment": "not_applicable"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          }
+        ]
+      },
+      {
+        "sourceSystem": "salesforce",
+        "sourceTenant": "salesforce-syn-tenant-01",
+        "schemaLabel": "Salesforce standard objects plus illustrative custom API names (not qualified package metadata)",
+        "records": [
+          {
+            "sourceSystem": "salesforce",
+            "sourceTenant": "salesforce-syn-tenant-01",
+            "sourceEntity": "Account",
+            "sourceKey": "SF-ACCOUNT-SYN-BUYER-01",
+            "canonicalEntity": "Party",
+            "canonicalKey": "PTY-SYN-BUYER-01",
+            "sourceUpdatedAt": "2030-06-02T10:00:00Z",
+            "ingestedAt": "2030-06-02T10:00:10Z",
+            "recordState": "seeded",
+            "journeys": [
+              "hospitality-b2b"
+            ],
+            "refs": {
+              "accountType": "Business",
+              "ownerModel": "standard-object"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "salesforce",
+            "sourceTenant": "salesforce-syn-tenant-01",
+            "sourceEntity": "Account",
+            "sourceKey": "SF-ACCOUNT-SYN-SPONSOR-01",
+            "canonicalEntity": "SponsorAccount",
+            "canonicalKey": "SPONSOR-SYN-001",
+            "sourceUpdatedAt": "2030-06-02T10:00:20Z",
+            "ingestedAt": "2030-06-02T10:00:30Z",
+            "recordState": "seeded",
+            "journeys": [
+              "sponsorship"
+            ],
+            "refs": {
+              "partyKey": "PTY-SYN-SPONSOR-01",
+              "ownerModel": "standard-object"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "salesforce",
+            "sourceTenant": "salesforce-syn-tenant-01",
+            "sourceEntity": "Contact",
+            "sourceKey": "SF-CONTACT-SYN-FAN-01",
+            "canonicalEntity": "Party",
+            "canonicalKey": "PTY-SYN-FAN-01",
+            "sourceUpdatedAt": "2030-06-02T10:01:00Z",
+            "ingestedAt": "2030-06-02T10:01:10Z",
+            "recordState": "seeded",
+            "journeys": [
+              "fan-purchase",
+              "complaint-credit"
+            ],
+            "refs": {
+              "accountSourceKey": "SF-ACCOUNT-SYN-BUYER-01",
+              "ownerModel": "standard-object",
+              "emailDomain": "example.test"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "salesforce",
+            "sourceTenant": "salesforce-syn-tenant-01",
+            "sourceEntity": "Campaign",
+            "sourceKey": "SF-CAMPAIGN-SYN-REPLAY-01",
+            "canonicalEntity": "Campaign",
+            "canonicalKey": "CAMPAIGN-SYN-001",
+            "sourceUpdatedAt": "2030-06-02T10:02:00Z",
+            "ingestedAt": "2030-06-02T10:02:10Z",
+            "recordState": "seeded",
+            "journeys": [
+              "fan-purchase"
+            ],
+            "refs": {
+              "ownerModel": "standard-object"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "salesforce",
+            "sourceTenant": "salesforce-syn-tenant-01",
+            "sourceEntity": "Opportunity",
+            "sourceKey": "SF-OPP-SYN-HOSP-01",
+            "canonicalEntity": "CommercialOrder",
+            "canonicalKey": "ORD-SYN-HOSP-001",
+            "sourceUpdatedAt": "2030-06-02T10:03:00Z",
+            "ingestedAt": "2030-06-02T10:03:10Z",
+            "recordState": "seeded",
+            "journeys": [
+              "hospitality-b2b"
+            ],
+            "refs": {
+              "accountSourceKey": "SF-ACCOUNT-SYN-BUYER-01",
+              "eventSourceKey": "OEVT-001",
+              "stage": "Closed Won",
+              "ownerModel": "standard-object"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "salesforce",
+            "sourceTenant": "salesforce-syn-tenant-01",
+            "sourceEntity": "Opportunity",
+            "sourceKey": "SF-OPP-SYN-SPONSOR-01",
+            "canonicalEntity": "SponsorshipAgreement",
+            "canonicalKey": "AGREEMENT-SYN-001",
+            "sourceUpdatedAt": "2030-06-02T10:03:20Z",
+            "ingestedAt": "2030-06-02T10:03:30Z",
+            "recordState": "seeded",
+            "journeys": [
+              "sponsorship"
+            ],
+            "refs": {
+              "accountSourceKey": "SF-ACCOUNT-SYN-SPONSOR-01",
+              "eventSourceKey": "OEVT-001",
+              "stage": "Contracted",
+              "ownerModel": "standard-object"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "salesforce",
+            "sourceTenant": "salesforce-syn-tenant-01",
+            "sourceEntity": "Sponsorship_Commitment__c",
+            "sourceKey": "SF-COMMIT-SYN-001",
+            "canonicalEntity": "SponsorshipCommitment",
+            "canonicalKey": "COMMIT-SYN-001",
+            "sourceUpdatedAt": "2030-06-02T10:04:00Z",
+            "ingestedAt": "2030-06-02T10:04:10Z",
+            "recordState": "seeded",
+            "journeys": [
+              "sponsorship"
+            ],
+            "refs": {
+              "opportunitySourceKey": "SF-OPP-SYN-SPONSOR-01",
+              "objectQualification": "illustrative-custom-api-name-unqualified",
+              "fulfillmentEvidence": "synthetic://synthetic-grand-prix-promoter-v1/evidence/COMMIT-SYN-001"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "salesforce",
+            "sourceTenant": "salesforce-syn-tenant-01",
+            "sourceEntity": "Case",
+            "sourceKey": "SF-CASE-SYN-FAN-001",
+            "canonicalEntity": "CRMCase",
+            "canonicalKey": "CASE-SYN-FAN-001",
+            "sourceUpdatedAt": "2030-06-02T10:05:00Z",
+            "ingestedAt": "2030-06-02T10:05:10Z",
+            "recordState": "seeded",
+            "journeys": [
+              "complaint-credit"
+            ],
+            "refs": {
+              "contactSourceKey": "SF-CONTACT-SYN-FAN-01",
+              "orderKey": "ORD-SYN-FAN-001",
+              "status": "Resolved",
+              "ownerModel": "standard-object"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          }
+        ]
+      },
+      {
+        "sourceSystem": "sap-plan-b-synthetic",
+        "sourceTenant": "sap-planb-syn-tenant-01",
+        "schemaLabel": "Synthetic SAP-shaped fixture intended for future Fabric-native-path evaluation; not connected or processed",
+        "records": [
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "BusinessPartner",
+            "sourceKey": "SAP-BP-FAN-001",
+            "canonicalEntity": "Party",
+            "canonicalKey": "PTY-SYN-FAN-01",
+            "sourceUpdatedAt": "2030-06-03T11:00:00Z",
+            "ingestedAt": "2030-06-03T11:00:05Z",
+            "recordState": "seeded",
+            "journeys": [
+              "fan-purchase",
+              "complaint-credit"
+            ],
+            "refs": {
+              "bpRole": "Customer",
+              "costCenterSourceKey": "SAP-CC-CUSTOMER-001"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "BusinessPartner",
+            "sourceKey": "SAP-BP-BUYER-001",
+            "canonicalEntity": "Party",
+            "canonicalKey": "PTY-SYN-BUYER-01",
+            "sourceUpdatedAt": "2030-06-03T11:00:10Z",
+            "ingestedAt": "2030-06-03T11:00:15Z",
+            "recordState": "seeded",
+            "journeys": [
+              "hospitality-b2b"
+            ],
+            "refs": {
+              "bpRole": "Customer",
+              "costCenterSourceKey": "SAP-CC-HOSP-001"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "BusinessPartner",
+            "sourceKey": "SAP-BP-SPONSOR-001",
+            "canonicalEntity": "Party",
+            "canonicalKey": "PTY-SYN-SPONSOR-01",
+            "sourceUpdatedAt": "2030-06-03T11:00:20Z",
+            "ingestedAt": "2030-06-03T11:00:25Z",
+            "recordState": "seeded",
+            "journeys": [
+              "sponsorship"
+            ],
+            "refs": {
+              "bpRole": "Customer",
+              "costCenterSourceKey": "SAP-CC-SPONSOR-001"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "BusinessPartner",
+            "sourceKey": "SAP-BP-SUPPLIER-HOSP-001",
+            "canonicalEntity": null,
+            "canonicalKey": null,
+            "mappingStatus": "source-reference-only-no-canonical-entity",
+            "sourceUpdatedAt": "2030-06-03T11:00:25Z",
+            "ingestedAt": "2030-06-03T11:00:30Z",
+            "recordState": "seeded",
+            "journeys": [
+              "hospitality-b2b"
+            ],
+            "refs": {
+              "bpRole": "Supplier",
+              "displayName": "Synthetic Hospitality Supplier"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "BusinessPartner",
+            "sourceKey": "SAP-BP-SUPPLIER-SPONSOR-001",
+            "canonicalEntity": null,
+            "canonicalKey": null,
+            "mappingStatus": "source-reference-only-no-canonical-entity",
+            "sourceUpdatedAt": "2030-06-03T11:00:35Z",
+            "ingestedAt": "2030-06-03T11:00:40Z",
+            "recordState": "seeded",
+            "journeys": [
+              "sponsorship"
+            ],
+            "refs": {
+              "bpRole": "Supplier",
+              "displayName": "Synthetic Sponsorship Supplier"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "Supplier",
+            "sourceKey": "SAP-SUPPLIER-HOSP-001",
+            "canonicalEntity": null,
+            "canonicalKey": null,
+            "mappingStatus": "source-reference-only-no-canonical-entity",
+            "sourceUpdatedAt": "2030-06-03T11:00:30Z",
+            "ingestedAt": "2030-06-03T11:00:35Z",
+            "recordState": "seeded",
+            "journeys": [
+              "hospitality-b2b"
+            ],
+            "refs": {
+              "bpSourceKey": "SAP-BP-SUPPLIER-HOSP-001",
+              "supplierRole": "Vendor",
+              "costCenterSourceKey": "SAP-CC-HOSP-001"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "Supplier",
+            "sourceKey": "SAP-SUPPLIER-SPONSOR-001",
+            "canonicalEntity": null,
+            "canonicalKey": null,
+            "mappingStatus": "source-reference-only-no-canonical-entity",
+            "sourceUpdatedAt": "2030-06-03T11:00:40Z",
+            "ingestedAt": "2030-06-03T11:00:45Z",
+            "recordState": "seeded",
+            "journeys": [
+              "sponsorship"
+            ],
+            "refs": {
+              "bpSourceKey": "SAP-BP-SUPPLIER-SPONSOR-001",
+              "supplierRole": "Vendor",
+              "costCenterSourceKey": "SAP-CC-SPONSOR-001"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "SupplierCost",
+            "sourceKey": "SAP-COST-HOSP-001",
+            "canonicalEntity": "SupplierCost",
+            "canonicalKey": "COST-SYN-HOSP-001",
+            "sourceUpdatedAt": "2030-06-03T11:01:20Z",
+            "ingestedAt": "2030-06-03T11:01:25Z",
+            "recordState": "seeded",
+            "journeys": [
+              "hospitality-b2b"
+            ],
+            "refs": {
+              "supplierSourceKey": "SAP-SUPPLIER-HOSP-001",
+              "costCenterSourceKey": "SAP-CC-HOSP-001",
+              "documentSourceKey": "SAP-DOC-005",
+              "documentLineSourceKey": "SAP-LINE-005",
+              "eventKey": "EVT-SYN-001",
+              "partyKey": "PTY-SYN-BUYER-01",
+              "amountMinor": 25000,
+              "currency": "USD"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "SupplierCost",
+            "sourceKey": "SAP-COST-SPONSOR-001",
+            "canonicalEntity": "SupplierCost",
+            "canonicalKey": "COST-SYN-SPONSOR-001",
+            "sourceUpdatedAt": "2030-06-03T11:01:30Z",
+            "ingestedAt": "2030-06-03T11:01:35Z",
+            "recordState": "seeded",
+            "journeys": [
+              "sponsorship"
+            ],
+            "refs": {
+              "supplierSourceKey": "SAP-SUPPLIER-SPONSOR-001",
+              "costCenterSourceKey": "SAP-CC-SPONSOR-001",
+              "documentSourceKey": "SAP-DOC-006",
+              "documentLineSourceKey": "SAP-LINE-006",
+              "eventKey": "EVT-SYN-001",
+              "partyKey": "PTY-SYN-SPONSOR-01",
+              "amountMinor": 10000,
+              "currency": "USD"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "CostCenter",
+            "sourceKey": "SAP-CC-CUSTOMER-001",
+            "canonicalEntity": null,
+            "canonicalKey": null,
+            "mappingStatus": "source-reference-only-no-canonical-entity",
+            "sourceUpdatedAt": "2030-06-03T11:00:50Z",
+            "ingestedAt": "2030-06-03T11:00:55Z",
+            "recordState": "seeded",
+            "journeys": [
+              "fan-purchase",
+              "complaint-credit"
+            ],
+            "refs": {
+              "category": "customer-service"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "CostCenter",
+            "sourceKey": "SAP-CC-HOSP-001",
+            "canonicalEntity": null,
+            "canonicalKey": null,
+            "mappingStatus": "source-reference-only-no-canonical-entity",
+            "sourceUpdatedAt": "2030-06-03T11:01:00Z",
+            "ingestedAt": "2030-06-03T11:01:05Z",
+            "recordState": "seeded",
+            "journeys": [
+              "hospitality-b2b"
+            ],
+            "refs": {
+              "category": "hospitality-operations"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "CostCenter",
+            "sourceKey": "SAP-CC-SPONSOR-001",
+            "canonicalEntity": null,
+            "canonicalKey": null,
+            "mappingStatus": "source-reference-only-no-canonical-entity",
+            "sourceUpdatedAt": "2030-06-03T11:01:10Z",
+            "ingestedAt": "2030-06-03T11:01:15Z",
+            "recordState": "seeded",
+            "journeys": [
+              "sponsorship"
+            ],
+            "refs": {
+              "category": "sponsorship-operations"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "SAPDocument",
+            "sourceKey": "SAP-DOC-001",
+            "canonicalEntity": "ERPDocument",
+            "canonicalKey": "ERP-SYN-INV-FAN-001",
+            "sourceUpdatedAt": "2030-06-03T11:11:00Z",
+            "ingestedAt": "2030-06-03T11:11:05Z",
+            "recordState": "seeded",
+            "journeys": [
+              "fan-purchase"
+            ],
+            "refs": {
+              "documentLineSourceKey": "SAP-LINE-001",
+              "documentLineKey": "ERPL-SYN-001",
+              "documentLinkKey": "LINK-SYN-FAN-INV-001",
+              "partnerSourceKey": "SAP-BP-FAN-001",
+              "orderKey": "ORD-SYN-FAN-001",
+              "scenarioCreditKey": null,
+              "documentType": "customer_invoice",
+              "amountMinor": 5000,
+              "currency": "USD"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "SAPDocumentLine",
+            "sourceKey": "SAP-LINE-001",
+            "canonicalEntity": "ERPDocumentLine",
+            "canonicalKey": "ERPL-SYN-001",
+            "sourceUpdatedAt": "2030-06-03T11:21:00Z",
+            "ingestedAt": "2030-06-03T11:21:05Z",
+            "recordState": "seeded",
+            "journeys": [
+              "fan-purchase"
+            ],
+            "refs": {
+              "documentSourceKey": "SAP-DOC-001",
+              "documentKey": "ERP-SYN-INV-FAN-001",
+              "documentLinkKey": "LINK-SYN-FAN-INV-001",
+              "lineGrossMinor": 5000,
+              "lineNetMinor": 5000,
+              "lineTaxMinor": 0,
+              "taxTreatment": "not_applicable",
+              "currency": "USD"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "SAPDocument",
+            "sourceKey": "SAP-DOC-002",
+            "canonicalEntity": "ERPDocument",
+            "canonicalKey": "ERP-SYN-INV-HOSP-001",
+            "sourceUpdatedAt": "2030-06-03T11:12:00Z",
+            "ingestedAt": "2030-06-03T11:12:05Z",
+            "recordState": "seeded",
+            "journeys": [
+              "hospitality-b2b"
+            ],
+            "refs": {
+              "documentLineSourceKey": "SAP-LINE-002",
+              "documentLineKey": "ERPL-SYN-002",
+              "documentLinkKey": "LINK-SYN-HOSP-INV-001",
+              "partnerSourceKey": "SAP-BP-BUYER-001",
+              "orderKey": "ORD-SYN-HOSP-001",
+              "scenarioCreditKey": null,
+              "documentType": "customer_invoice",
+              "amountMinor": 100000,
+              "currency": "USD"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "SAPDocumentLine",
+            "sourceKey": "SAP-LINE-002",
+            "canonicalEntity": "ERPDocumentLine",
+            "canonicalKey": "ERPL-SYN-002",
+            "sourceUpdatedAt": "2030-06-03T11:22:00Z",
+            "ingestedAt": "2030-06-03T11:22:05Z",
+            "recordState": "seeded",
+            "journeys": [
+              "hospitality-b2b"
+            ],
+            "refs": {
+              "documentSourceKey": "SAP-DOC-002",
+              "documentKey": "ERP-SYN-INV-HOSP-001",
+              "documentLinkKey": "LINK-SYN-HOSP-INV-001",
+              "lineGrossMinor": 100000,
+              "lineNetMinor": 100000,
+              "lineTaxMinor": 0,
+              "taxTreatment": "not_applicable",
+              "currency": "USD"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "SAPDocument",
+            "sourceKey": "SAP-DOC-003",
+            "canonicalEntity": "ERPDocument",
+            "canonicalKey": "ERP-SYN-CM-FAN-001",
+            "sourceUpdatedAt": "2030-06-03T11:13:00Z",
+            "ingestedAt": "2030-06-03T11:13:05Z",
+            "recordState": "seeded",
+            "journeys": [
+              "complaint-credit"
+            ],
+            "refs": {
+              "documentLineSourceKey": "SAP-LINE-003",
+              "documentLineKey": "ERPL-SYN-003",
+              "documentLinkKey": "LINK-SYN-FAN-CM-001",
+              "partnerSourceKey": "SAP-BP-FAN-001",
+              "orderKey": "ORD-SYN-FAN-001",
+              "scenarioCreditKey": "CREDIT-SYN-FAN-001",
+              "documentType": "customer_credit_memo",
+              "amountMinor": 5000,
+              "currency": "USD"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "SAPDocumentLine",
+            "sourceKey": "SAP-LINE-003",
+            "canonicalEntity": "ERPDocumentLine",
+            "canonicalKey": "ERPL-SYN-003",
+            "sourceUpdatedAt": "2030-06-03T11:23:00Z",
+            "ingestedAt": "2030-06-03T11:23:05Z",
+            "recordState": "seeded",
+            "journeys": [
+              "complaint-credit"
+            ],
+            "refs": {
+              "documentSourceKey": "SAP-DOC-003",
+              "documentKey": "ERP-SYN-CM-FAN-001",
+              "documentLinkKey": "LINK-SYN-FAN-CM-001",
+              "lineGrossMinor": 5000,
+              "lineNetMinor": 5000,
+              "lineTaxMinor": 0,
+              "taxTreatment": "not_applicable",
+              "currency": "USD"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "SAPDocument",
+            "sourceKey": "SAP-DOC-004",
+            "canonicalEntity": "ERPDocument",
+            "canonicalKey": "ERP-SYN-INV-SPONSOR-001",
+            "sourceUpdatedAt": "2030-06-03T11:14:00Z",
+            "ingestedAt": "2030-06-03T11:14:05Z",
+            "recordState": "seeded",
+            "journeys": [
+              "sponsorship"
+            ],
+            "refs": {
+              "documentLineSourceKey": "SAP-LINE-004",
+              "documentLineKey": "ERPL-SYN-004",
+              "documentLinkKey": "LINK-SYN-SPONSOR-INV-001",
+              "partnerSourceKey": "SAP-BP-SPONSOR-001",
+              "orderKey": null,
+              "scenarioCreditKey": null,
+              "documentType": "customer_invoice",
+              "amountMinor": 500000,
+              "currency": "USD"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "SAPDocumentLine",
+            "sourceKey": "SAP-LINE-004",
+            "canonicalEntity": "ERPDocumentLine",
+            "canonicalKey": "ERPL-SYN-004",
+            "sourceUpdatedAt": "2030-06-03T11:24:00Z",
+            "ingestedAt": "2030-06-03T11:24:05Z",
+            "recordState": "seeded",
+            "journeys": [
+              "sponsorship"
+            ],
+            "refs": {
+              "documentSourceKey": "SAP-DOC-004",
+              "documentKey": "ERP-SYN-INV-SPONSOR-001",
+              "documentLinkKey": "LINK-SYN-SPONSOR-INV-001",
+              "lineGrossMinor": 500000,
+              "lineNetMinor": 500000,
+              "lineTaxMinor": 0,
+              "taxTreatment": "not_applicable",
+              "currency": "USD"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "SAPDocument",
+            "sourceKey": "SAP-DOC-005",
+            "canonicalEntity": "ERPDocument",
+            "canonicalKey": "ERP-SYN-SUPPLIER-HOSP-001",
+            "sourceUpdatedAt": "2030-06-03T11:15:00Z",
+            "ingestedAt": "2030-06-03T11:15:05Z",
+            "recordState": "seeded",
+            "journeys": [
+              "hospitality-b2b"
+            ],
+            "refs": {
+              "documentLineSourceKey": "SAP-LINE-005",
+              "documentLineKey": "ERPL-SYN-005",
+              "documentLinkKey": "LINK-SYN-SUPPLIER-HOSP-001",
+              "partnerSourceKey": "SAP-SUPPLIER-HOSP-001",
+              "orderKey": "ORD-SYN-HOSP-001",
+              "scenarioCreditKey": null,
+              "documentType": "supplier_invoice",
+              "amountMinor": 25000,
+              "currency": "USD"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "SAPDocumentLine",
+            "sourceKey": "SAP-LINE-005",
+            "canonicalEntity": "ERPDocumentLine",
+            "canonicalKey": "ERPL-SYN-005",
+            "sourceUpdatedAt": "2030-06-03T11:25:00Z",
+            "ingestedAt": "2030-06-03T11:25:05Z",
+            "recordState": "seeded",
+            "journeys": [
+              "hospitality-b2b"
+            ],
+            "refs": {
+              "documentSourceKey": "SAP-DOC-005",
+              "documentKey": "ERP-SYN-SUPPLIER-HOSP-001",
+              "documentLinkKey": "LINK-SYN-SUPPLIER-HOSP-001",
+              "lineGrossMinor": 25000,
+              "lineNetMinor": 25000,
+              "lineTaxMinor": 0,
+              "taxTreatment": "not_applicable",
+              "currency": "USD"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "SAPDocument",
+            "sourceKey": "SAP-DOC-006",
+            "canonicalEntity": "ERPDocument",
+            "canonicalKey": "ERP-SYN-SUPPLIER-SPONSOR-001",
+            "sourceUpdatedAt": "2030-06-03T11:16:00Z",
+            "ingestedAt": "2030-06-03T11:16:05Z",
+            "recordState": "seeded",
+            "journeys": [
+              "sponsorship"
+            ],
+            "refs": {
+              "documentLineSourceKey": "SAP-LINE-006",
+              "documentLineKey": "ERPL-SYN-006",
+              "documentLinkKey": "LINK-SYN-SUPPLIER-SPONSOR-001",
+              "partnerSourceKey": "SAP-SUPPLIER-SPONSOR-001",
+              "orderKey": null,
+              "scenarioCreditKey": null,
+              "documentType": "supplier_invoice",
+              "amountMinor": 10000,
+              "currency": "USD"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "SAPDocumentLine",
+            "sourceKey": "SAP-LINE-006",
+            "canonicalEntity": "ERPDocumentLine",
+            "canonicalKey": "ERPL-SYN-006",
+            "sourceUpdatedAt": "2030-06-03T11:26:00Z",
+            "ingestedAt": "2030-06-03T11:26:05Z",
+            "recordState": "seeded",
+            "journeys": [
+              "sponsorship"
+            ],
+            "refs": {
+              "documentSourceKey": "SAP-DOC-006",
+              "documentKey": "ERP-SYN-SUPPLIER-SPONSOR-001",
+              "documentLinkKey": "LINK-SYN-SUPPLIER-SPONSOR-001",
+              "lineGrossMinor": 10000,
+              "lineNetMinor": 10000,
+              "lineTaxMinor": 0,
+              "taxTreatment": "not_applicable",
+              "currency": "USD"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "SAPCostAllocation",
+            "sourceKey": "SAP-ALLOC-HOSP-001",
+            "canonicalEntity": "CostAllocation",
+            "canonicalKey": "ALLOC-SYN-HOSP-001",
+            "sourceUpdatedAt": "2030-06-03T11:40:00Z",
+            "ingestedAt": "2030-06-03T11:40:05Z",
+            "recordState": "seeded",
+            "journeys": [
+              "hospitality-b2b"
+            ],
+            "refs": {
+              "supplierSourceKey": "SAP-SUPPLIER-HOSP-001",
+              "costCenterSourceKey": "SAP-CC-HOSP-001",
+              "supplierCostSourceKey": "SAP-COST-HOSP-001",
+              "supplierCostKey": "COST-SYN-HOSP-001",
+              "eventKey": "EVT-SYN-001",
+              "partyKey": "PTY-SYN-BUYER-01",
+              "amountMinor": 25000,
+              "currency": "USD"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          },
+          {
+            "sourceSystem": "sap-plan-b-synthetic",
+            "sourceTenant": "sap-planb-syn-tenant-01",
+            "sourceEntity": "SAPCostAllocation",
+            "sourceKey": "SAP-ALLOC-SPONSOR-001",
+            "canonicalEntity": "CostAllocation",
+            "canonicalKey": "ALLOC-SYN-SPONSOR-001",
+            "sourceUpdatedAt": "2030-06-03T11:40:10Z",
+            "ingestedAt": "2030-06-03T11:40:15Z",
+            "recordState": "seeded",
+            "journeys": [
+              "sponsorship"
+            ],
+            "refs": {
+              "supplierSourceKey": "SAP-SUPPLIER-SPONSOR-001",
+              "costCenterSourceKey": "SAP-CC-SPONSOR-001",
+              "supplierCostSourceKey": "SAP-COST-SPONSOR-001",
+              "supplierCostKey": "COST-SYN-SPONSOR-001",
+              "eventKey": "EVT-SYN-001",
+              "partyKey": "PTY-SYN-SPONSOR-01",
+              "amountMinor": 10000,
+              "currency": "USD"
+            },
+            "scenarioId": "synthetic-grand-prix-promoter-v1",
+            "scenarioVersion": "1.0.0",
+            "datasetId": "synthetic-gp-dataset-v1",
+            "schemaVersion": "1.0.0",
+            "runVersion": "run-0001",
+            "syntheticProvenance": "synthetic-only"
+          }
+        ]
+      }
+    ],
+    "invalidInputScenarios": [
+      {
+        "id": "missing-oracle-price-for-order-line",
+        "representedInSeed": false,
+        "sourceRecord": {
+          "sourceSystem": "oracle",
+          "sourceTenant": "oracle-syn-tenant-01",
+          "sourceEntity": "OracleOrderLine",
+          "sourceKey": "OORDERLINE-INVALID-NO-PRICE",
+          "refs": {
+            "productSourceKey": "OPRD-REPLAY-001",
+            "priceSourceKey": "MISSING-PRICE"
+          }
+        },
+        "reason": "seeded records include only successful product-price pairs"
+      },
+      {
+        "id": "missing-salesforce-opportunity-account-link",
+        "representedInSeed": false,
+        "sourceRecord": {
+          "sourceSystem": "salesforce",
+          "sourceTenant": "salesforce-syn-tenant-01",
+          "sourceEntity": "Opportunity",
+          "sourceKey": "SF-OPP-INVALID-NO-ACCOUNT",
+          "refs": {
+            "accountSourceKey": "MISSING-ACCOUNT"
+          }
+        },
+        "reason": "every seeded opportunity links to a seeded account"
+      },
+      {
+        "id": "sap-document-without-business-partner",
+        "representedInSeed": false,
+        "sourceRecord": {
+          "sourceSystem": "sap-plan-b-synthetic",
+          "sourceTenant": "sap-planb-syn-tenant-01",
+          "sourceEntity": "SAPDocument",
+          "sourceKey": "SAP-DOC-INVALID-NO-PARTNER",
+          "refs": {
+            "partnerSourceKey": "MISSING-BUSINESS-PARTNER"
+          }
+        },
+        "reason": "every seeded SAP customer document references a seeded business partner"
+      },
+      {
+        "id": "sap-cost-allocation-without-cost-center",
+        "representedInSeed": false,
+        "sourceRecord": {
+          "sourceSystem": "sap-plan-b-synthetic",
+          "sourceTenant": "sap-planb-syn-tenant-01",
+          "sourceEntity": "SAPCostAllocation",
+          "sourceKey": "SAP-ALLOC-INVALID-NO-COST-CENTER",
+          "refs": {
+            "costCenterSourceKey": "MISSING-COST-CENTER"
+          }
+        },
+        "reason": "every seeded SAP cost allocation references a seeded cost center"
+      }
     ]
   }
 }

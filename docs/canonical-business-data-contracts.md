@@ -2,7 +2,7 @@
 
 This package defines the shared business boundary for the promoter Hub and Fan Experience. The machine-readable entity registry is `contracts/canonical-contracts.json`; this document defines behavior that must remain true across source adapters, operational commands, publications, and app projections.
 
-All examples and the companion manifest are synthetic. Plan A means a future, separately authorized real SAP adapter. Plan B is a synthetic SAP-shaped scenario ledger processed with native Fabric capabilities. No SAP, Oracle, Salesforce, sports-data provider, live race, customer, or commercial relationship is connected or represented by these fixtures.
+All examples and the companion manifest are synthetic. Plan A means a future, separately authorized real SAP adapter. Plan B is an illustrative synthetic SAP-shaped scenario ledger intended for a future native-Fabric processing pilot; that processing path has not been qualified or run. No SAP, Oracle, Salesforce, sports-data provider, live race, customer, or commercial relationship is connected or represented by these fixtures.
 
 ## Identity, ownership, and grain
 
@@ -50,9 +50,131 @@ Keep these measures separate in every projection and reconciliation:
 
 Every published record carries source system/key, source update time, ingestion time, schema version, dataset and plan, and `PublicationKey`; every financial/business projection can be traced to the source document or operational receipt. Identify simulated records and UI metrics with a visible synthetic/scenario provenance label. Keep freshness and unavailable-value status explicit.
 
-**Plan A** retains the same canonical contract but maps to an actually authorized SAP ERP through a supported interface; source document numbers and shapes remain source-specific. No Plan A source is enabled by this package. **Plan B** uses a deterministic synthetic source and native Fabric processing; its documents are visibly scenario documents and are not evidence of a connected SAP system. Oracle/Salesforce source mappings remain separate from the SAP choice. Adapters normalize both plans; do not force fictional tables to mimic a specific SAP release.
+**Plan A** retains the same canonical contract but maps to an actually authorized SAP ERP through a supported interface; source document numbers and shapes remain source-specific. No Plan A source is enabled by this package. **Plan B** is intended to use a deterministic synthetic source and a native Fabric processing path only after a separate support pilot; its documents are visibly scenario documents and are not evidence of a connected SAP system. Oracle/Salesforce source mappings remain separate from the SAP choice. Adapters normalize both plans; do not force fictional tables to mimic a specific SAP release.
 
 `SourcePublication` is immutable once published. A corrected/updated result creates a new publication with its own key and `asOf`; consumers select exactly one publication/run. Publication metadata distinguishes source time from ingestion/publication time. Do not silently combine an older SAP publication with a newer operational or sports publication.
+
+## Source-seed fixture for Oracle, Salesforce, and SAP Plan B
+
+`scenarios/canonical-scenario-manifest.json` now includes a `sourceSeed` section that defines deterministic, synthetic source records for Oracle, Salesforce, and SAP Plan B across the same four journeys.
+
+- This section is a data fixture and logical mapping, not a source adapter, provisioning package, or seeding workflow; no source has been connected or loaded.
+- Every source record carries `sourceSystem`, `sourceTenant`, `sourceEntity`, `sourceKey`, `scenarioId`, `scenarioVersion`, `datasetId`, `schemaVersion`, and synthetic provenance.
+- Oracle records are logical source contracts only, with illustrative schema labels (not executable DDL), and explicit links across event, zone, product, bundle component, and price records.
+- Salesforce records use standard objects where applicable (`Account`, `Contact`, `Opportunity`, `Case`, `Campaign`) and clearly mark custom API names as illustrative/unqualified (for example `Sponsorship_Commitment__c`).
+- SAP Plan B records are an illustrative synthetic SAP-shaped fixture intended for a future Fabric-native-path pilot; no processing or capability qualification has been performed, and the records do not claim SAP provisioning or connectivity. Business-partner, supplier, and cost-center rows are source-only references where P1 has no separate canonical master entity; they must not be mapped onto transactional `SupplierCost` or `CostAllocation` keys.
+- Source-only SAP master references have no `canonicalEntity` or `canonicalKey`; their explicit mapping status prevents conflating them with canonical financial facts.
+- Seeding identity is deterministic and idempotent for the same run version; run-version namespaces are explicit and isolated.
+- Invalid or incomplete inputs are documented as negative scenarios and are intentionally excluded from successful seeded records.
+
+### Small regression fixture vs. high-volume synthetic export
+
+The canonical scenario manifest is intentionally small and stable for fast contract regression tests. The current fixture has **47 source-seed rows** and remains the semantic authority for:
+
+- one fictional event and one synthetic replay session;
+- the four approved journeys (fan purchase, hospitality B2B, complaint-credit, sponsorship);
+- Plan B synthetic SAP semantics and explicit unsupported-live boundaries.
+
+For larger demos and stress-style validation, use the deterministic local CLI:
+
+```bash
+python -m scripts.volume_fixture generate --output-path <your-output-folder>
+python -m scripts.volume_fixture validate --output-path <your-output-folder>
+```
+
+Default generation exports **10,000 customer parties and 25,000 commercial orders** plus coherent source-separated Oracle/Salesforce/SAP Plan B and synthetic operational records in JSONL files. The CLI:
+
+- never runs on import (explicit invocation only);
+- refuses overwrite by default (`--if-exists error`) and supports deterministic no-op verification (`--if-exists verify-noop`);
+- supports smaller test runs via `--customer-count`, `--order-count`, and namespace separation via `--run-version` and `--seed`;
+- keeps synthetic-only provenance/disclosure and records unsupported boundaries in `manifest.json`.
+
+The 10,000 customers are **8,000 person fans plus 2,000 non-sponsor business
+organizations**, not 10,000 fans with extra organizations added. The **8 sponsor
+organizations are separate**, giving 10,008 total Parties. `populationCounts`
+reports `customerParties`, `fanCustomerParties`, `businessCustomerParties`, and
+`sponsorParties` independently. At smaller scales, business customers number
+`max(1, customer_count // 5)` and the remaining customers are fans. At least
+**2 customers** are required; `customer_count=1` fails before writing output
+because one Party cannot represent both required customer types.
+
+Replay/fan-purchase orders select only person fans; hospitality and weekend-bundle
+orders select only non-sponsor organization customers. Sponsors cannot buy through
+either commercial journey. Fans map to a Salesforce Contact and its Account;
+business customers map directly to a Salesforce Account, distinct from sponsor
+Accounts. Source-only SAP Customer BPs preserve these typed Party crosswalks.
+Only fans receive synthetic person Contacts and explicit marketing consent rows.
+Business support cases link to the customer Account and use a null Contact with
+`organization-account-no-person-contact`; no fictional contact is inferred from
+an organization. Three or more orders exercise all three sellable products;
+smaller order counts contain only the corresponding prefix of purchase journeys.
+
+This local export supports the synthetic data work for **issue #18**. It does not
+qualify source schemas, SAP/Fabric capabilities, or any application integration.
+Paths and entity names are illustrative logical mappings, not executable Oracle
+DDL, verified Salesforce API mappings, or release-specific SAP tables.
+
+The volume profile follows these additional, testable rules:
+
+- All rows carry scenario ID/version, dataset, run, seed, schema, namespace,
+  publication, fixed `asOf`, and synthetic provenance. Every key includes a
+  readable run label plus a SHA-256 suffix over the **complete**
+  `(scenarioId, scenarioVersion, datasetId, runVersion, seed)` tuple. Punctuation
+  variants do not collapse into the same namespace. The output directory is not
+  an input to deterministic content.
+- Party remains **Salesforce-owned**. `operational/party.jsonl` is explicitly a
+  canonical projection with its own source identity and a typed `sourceReference`
+  to the single Salesforce fan Contact, business-customer Account, or sponsor
+  Account row; it is not another CRM
+  row or an operational Party master. Source-only customer Accounts, Contacts,
+  Opportunities, and local simulated command receipts also have explicit null
+  canonical mappings when P1 has no separate entity for them.
+- Every customer and sponsor has a source-only SAP Plan B **Customer** business
+  partner, with an explicit Party/Salesforce crosswalk, not a second canonical
+  Party. Customer invoices and credit memos resolve that partner and Party.
+  Supplier invoices resolve a **Supplier** business partner through the supplier
+  master. BP, supplier, and cost-center records have null canonical entity/key
+  plus a mapping reason; none is a financial fact.
+- The single fictional event runs on **2030-06-15, 13:00–19:00 UTC**. Hospitality
+  and weekend bundles sell only before the event; synthetic replay is available
+  after it, starting **2030-06-16 19:00 UTC**. Each entitlement carries component
+  access windows. Digital replay consumes **no physical seats**. A weekend
+  bundle allocates its hospitality component once, not a seat for digital access.
+  Capacity is scaled for this volume profile, not a real circuit capacity.
+- The snapshot uses **2030-12-20 00:00 UTC** business `asOf` and a separate
+  **2030-12-31 23:59 UTC** publication visibility cutoff, never the machine clock.
+  Masters precede purchases; price/product windows are checked at order time.
+  Payment approval precedes confirmation, invoicing precedes support credit,
+  and campaign touches and explicit synthetic consent decisions retain their
+  own times. Historical expired hospitality access is not marked active.
+- Full credit revokes unconsumed access and releases its reservation; partial
+  credit preserves access state, and consumed access is never reversed. The
+  profile includes full/partial and consumed/unconsumed cases at default scale.
+  Operational orders remain a **separate simulated future Rayfin boundary**;
+  the export is not a working command service, transactional outbox, app, or
+  source adapter.
+- The validator requires the exact 31 JSONL paths plus `manifest.json`, checks
+  bytes, row counts, per-file checksums and the aggregate dataset digest, and
+  independently checks populations, source/canonical uniqueness, scope,
+  references, contract states, chronology, pricing, component capacity, and
+  per-document mathematics. The digest hashes canonical JSON of namespace,
+  parameters, and sorted `(path, recordCount, sha256)` file entries. It is an
+  integrity check, not an authenticity signature.
+- `financialTotalsBySourceCurrency` separates operational commercial gross,
+  simulated outcomes and credits; Salesforce contracted/invoiced/evidenced
+  sponsorship; and SAP order invoices, sponsor invoices, credit memos, supplier
+  invoices/costs and allocations. The overall posted-customer-invoice total
+  includes both order and sponsor invoices; `postedOrderInvoiceMinor` does not.
+  These are integer USD minor units with explicitly `not_applicable` tax, not
+  accounting recognition, ROI, settlement, or bank refunds.
+
+`verify-noop` **only compares every existing local export byte** with the same
+parameters and refuses mismatches or extra files. It performs no real-source
+write or upsert and does not establish idempotency of a future integration.
+Tests use a fresh `TemporaryDirectory` under the checkout for each test and
+automatically remove only that test's own files, even after failure. No existing
+demo exports or earlier test artifacts are deleted. Adversarial semantic tests
+refresh both file checksums and the aggregate digest before expecting rejection.
 
 ## Event time, ingestion time, replay, and as-of visibility
 
