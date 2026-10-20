@@ -8,6 +8,7 @@ Implemented documentation:
 - [Deployment ownership/support](deployment-ownership-support-matrix.md) (#8/#3).
 - [DEV identity pilot](dev-identity-pilot.md) (#8).
 - [Engineering conventions](engineering/README.md) (#22).
+- [Oracle cloud integration proposal](oracle-cloud-integration-proposal.md) (#19; review-only).
 
 [Runbooks](runbooks/README.md) reserve the operational/rebuild entry point.
 Existing flat documentation paths are stable; do not move another package's

@@ -3,7 +3,8 @@
 This is the placement contract for [#22](https://github.com/frdeange/FabricF1Demo/issues/22).
 See the [root entry point](../../README.md), [contribution guide](../../CONTRIBUTING.md)
 and [machine-readable inventory](scaffold-inventory.json).
-Reserved directories contain documentation only, not working products.
+Areas marked reserved contain navigation documentation only; package status is
+tracked per area in the inventory.
 
 ## Repository map
 
@@ -14,7 +15,7 @@ Reserved directories contain documentation only, not working products.
 | [packages](../../packages/README.md) | Shared [application contract bindings](../../packages/contracts/README.md) | Reserved; canonical business JSON remains authoritative (#5/#9) |
 | [contracts](../../contracts/README.md) | Canonical business entities and invariants | Implemented (#5); do not duplicate into packages |
 | [scenarios](../../scenarios/README.md) | Small deterministic scenario and journey fixture | Implemented (#5); volume generator belongs to #18 |
-| [sources](../../sources/README.md) | Native source schemas/metadata, seed adapters and connector configuration | Reserved: Oracle #19, Salesforce #20, SAP #6/#15, sports #7 |
+| [sources](../../sources/README.md) | Native source schemas/metadata, seed adapters and connector configuration | Partial: Oracle schema/seed #19; Mirroring qualification remains. Other owners: Salesforce #20, SAP #6/#15, sports #7 |
 | [infra](../../infra/README.md) | Infrastructure/bootstrap ownership entry point | Reserved here; existing Terraform remains #3-owned, host/gateway #21 |
 | [fabric](../../fabric/README.md) | Native item definitions below [workspace](../../fabric/workspace/README.md) | Reserved; ingestion #19/#20/#6, projections #4, intelligence #11, race path #7 |
 | [deploy](../../deploy/README.md) | Environment bindings, orchestration and release records | Reserved; deployment follow-up unassigned, coordination #3/#9 and workload owners |
@@ -48,13 +49,14 @@ deployment; a logical fixture is not a source-native schema.
 not a second manually maintained canonical specification. Small canonical
 fixtures stay in `scenarios`; do not turn that folder into a bulk export cache.
 
-#18 owns the planned local generator at `scripts/volume_fixture.py` and the
-interface `python -m scripts.volume_fixture generate|validate --output-path <path>`.
-Until that package lands, this command is not supplied by this revision.
+#18 owns the local generator at `scripts/volume_fixture.py` and the interface
+`python -m scripts.volume_fixture generate|validate --output-path <path>`.
 Its logical synthetic output families are `oracle`, `salesforce`, `sap_plan_b`
 and `operational`, with `manifest.json` for counts/digests/reconciliation.
-These are not executable Oracle DDL, Salesforce metadata, real SAP extracts or
-Rayfin-owned persistence. The generator does not prescribe an output root.
+These generated records are not executable Oracle DDL, Salesforce metadata,
+real SAP extracts or Rayfin-owned persistence. The Oracle source package maps
+only its owned fixture families into its source-native schema and seed script.
+The generator does not prescribe an output root.
 Use an explicit external directory or optional ignored local `generated` or
 `artifacts`; never commit bulk output. Tests use self-cleaning temp directories.
 
