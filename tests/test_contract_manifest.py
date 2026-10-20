@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import unittest
 from pathlib import Path
@@ -211,6 +212,235 @@ class CanonicalContractManifestTests(unittest.TestCase):
         self.assertEqual(0, output["additionalEntitlementsOnRetry"])
         self.assertEqual("full-scenario-credit-not-money-refund", credit["creditType"])
         self.assertEqual("revoked", credit["entitlementStateAfterCredit"])
+
+    def test_source_seed_records_have_required_identity_and_unique_upsert_keys(self) -> None:
+        source_seed = self.manifest["sourceSeed"]
+        self.assertEqual("B", source_seed["sapPlan"])
+        self.assertEqual("deterministic-upsert-noop", source_seed["idempotency"]["sameVersionBehavior"])
+        self.assertEqual("not-started-conditional", source_seed["adapterQualification"]["sapPlanA"])
+
+        records: list[dict] = []
+        for source_system in source_seed["sourceSystems"]:
+            self.assertTrue(source_system["schemaLabel"])
+            records.extend(source_system["records"])
+
+        self.assertGreater(len(records), 0)
+
+        key_fields = source_seed["idempotency"]["upsertIdentityFields"]
+        identities = set()
+        canonical_identities = set()
+        valid_journeys = {journey["journeyId"] for journey in self.manifest["journeys"]}
+        for source_system in source_seed["sourceSystems"]:
+            for record in source_system["records"]:
+                self.assertEqual(source_system["sourceSystem"], record["sourceSystem"])
+                self.assertEqual(source_system["sourceTenant"], record["sourceTenant"])
+
+        for record in records:
+            with self.subTest(sourceKey=record["sourceKey"], sourceEntity=record["sourceEntity"]):
+                self.assertTrue(record["sourceEntity"])
+                self.assertTrue(record["sourceKey"])
+                self.assertEqual("seeded", record["recordState"])
+                self.assertEqual("synthetic-only", record["syntheticProvenance"])
+                self.assertEqual(self.manifest["scenarioId"], record["scenarioId"])
+                self.assertEqual(self.manifest["scenarioVersion"], record["scenarioVersion"])
+                self.assertEqual(self.manifest["datasetId"], record["datasetId"])
+                self.assertEqual("1.0.0", record["schemaVersion"])
+                self.assertTrue(record["refs"])
+                self.assertTrue(set(record["journeys"]).issubset(valid_journeys))
+                identity = tuple(record[field] for field in key_fields)
+                self.assertNotIn(identity, identities)
+                identities.add(identity)
+                canonical_entity = record["canonicalEntity"]
+                canonical_key = record["canonicalKey"]
+                if canonical_entity is None or canonical_key is None:
+                    self.assertIsNone(canonical_entity)
+                    self.assertIsNone(canonical_key)
+                    self.assertEqual(
+                        "source-reference-only-no-canonical-entity",
+                        record["mappingStatus"],
+                    )
+                else:
+                    canonical_identity = (
+                        record["sourceSystem"],
+                        canonical_entity,
+                        canonical_key,
+                    )
+                    self.assertNotIn(canonical_identity, canonical_identities)
+                    canonical_identities.add(canonical_identity)
+
+    def test_source_seed_referential_integrity_for_oracle_salesforce_and_sap_plan_b(self) -> None:
+        source_seed = self.manifest["sourceSeed"]
+        by_system = {
+            source_system["sourceSystem"]: source_system["records"]
+            for source_system in source_seed["sourceSystems"]
+        }
+
+        oracle_records = by_system["oracle"]
+        salesforce_records = by_system["salesforce"]
+        sap_records = by_system["sap-plan-b-synthetic"]
+
+        oracle_by_key = {record["sourceKey"]: record for record in oracle_records}
+        def assert_source_ref(records_by_key: dict, source_key: str, source_entity: str) -> None:
+            self.assertIn(source_key, records_by_key)
+            self.assertEqual(source_entity, records_by_key[source_key]["sourceEntity"])
+
+        for record in oracle_records:
+            refs = record["refs"]
+            if record["sourceEntity"] == "OracleCatalogProduct":
+                assert_source_ref(oracle_by_key, refs["eventSourceKey"], "OracleEvent")
+                if "zoneSourceKey" in refs:
+                    assert_source_ref(oracle_by_key, refs["zoneSourceKey"], "OracleCircuitZone")
+            if record["sourceEntity"] == "OracleBundleComponent":
+                assert_source_ref(oracle_by_key, refs["bundleProductSourceKey"], "OracleCatalogProduct")
+                assert_source_ref(oracle_by_key, refs["componentProductSourceKey"], "OracleCatalogProduct")
+            if record["sourceEntity"] == "OraclePriceListEntry":
+                assert_source_ref(oracle_by_key, refs["eventSourceKey"], "OracleEvent")
+                assert_source_ref(oracle_by_key, refs["productSourceKey"], "OracleCatalogProduct")
+
+        salesforce_by_key = {record["sourceKey"]: record for record in salesforce_records}
+        for record in salesforce_records:
+            refs = record["refs"]
+            if record["sourceEntity"] == "Opportunity":
+                assert_source_ref(salesforce_by_key, refs["accountSourceKey"], "Account")
+            if record["sourceEntity"] == "Case":
+                assert_source_ref(salesforce_by_key, refs["contactSourceKey"], "Contact")
+                self.assertEqual("ORD-SYN-FAN-001", refs["orderKey"])
+            if record["sourceEntity"] == "Sponsorship_Commitment__c":
+                assert_source_ref(salesforce_by_key, refs["opportunitySourceKey"], "Opportunity")
+                self.assertEqual("illustrative-custom-api-name-unqualified", refs["objectQualification"])
+
+        sap_by_key = {record["sourceKey"]: record for record in sap_records}
+        sap_docs = [record for record in sap_records if record["sourceEntity"] == "SAPDocument"]
+        sap_lines = [record for record in sap_records if record["sourceEntity"] == "SAPDocumentLine"]
+        sap_allocs = [record for record in sap_records if record["sourceEntity"] == "SAPCostAllocation"]
+        sap_supplier_costs = [record for record in sap_records if record["sourceEntity"] == "SupplierCost"]
+        self.assertEqual(6, len(sap_docs))
+        self.assertEqual(6, len(sap_lines))
+        self.assertEqual(2, len(sap_allocs))
+        self.assertEqual(2, len(sap_supplier_costs))
+
+        for record in sap_docs:
+            refs = record["refs"]
+            assert_source_ref(sap_by_key, refs["documentLineSourceKey"], "SAPDocumentLine")
+            if refs["documentType"] == "supplier_invoice":
+                assert_source_ref(sap_by_key, refs["partnerSourceKey"], "Supplier")
+                supplier = sap_by_key[refs["partnerSourceKey"]]
+                assert_source_ref(sap_by_key, supplier["refs"]["bpSourceKey"], "BusinessPartner")
+                self.assertEqual("Supplier", sap_by_key[supplier["refs"]["bpSourceKey"]]["refs"]["bpRole"])
+            else:
+                assert_source_ref(sap_by_key, refs["partnerSourceKey"], "BusinessPartner")
+                self.assertEqual("Customer", sap_by_key[refs["partnerSourceKey"]]["refs"]["bpRole"])
+            if refs.get("orderKey"):
+                self.assertIn(refs["orderKey"], {"ORD-SYN-FAN-001", "ORD-SYN-HOSP-001"})
+        for record in sap_lines:
+            refs = record["refs"]
+            assert_source_ref(sap_by_key, refs["documentSourceKey"], "SAPDocument")
+            self.assertEqual(
+                refs["lineNetMinor"] + refs["lineTaxMinor"],
+                refs["lineGrossMinor"],
+            )
+        for record in sap_supplier_costs:
+            refs = record["refs"]
+            assert_source_ref(sap_by_key, refs["supplierSourceKey"], "Supplier")
+            assert_source_ref(sap_by_key, refs["costCenterSourceKey"], "CostCenter")
+            assert_source_ref(sap_by_key, refs["documentSourceKey"], "SAPDocument")
+            assert_source_ref(sap_by_key, refs["documentLineSourceKey"], "SAPDocumentLine")
+            self.assertEqual(refs["amountMinor"], sap_by_key[refs["documentLineSourceKey"]]["refs"]["lineGrossMinor"])
+        for record in sap_allocs:
+            refs = record["refs"]
+            assert_source_ref(sap_by_key, refs["supplierSourceKey"], "Supplier")
+            assert_source_ref(sap_by_key, refs["costCenterSourceKey"], "CostCenter")
+            assert_source_ref(sap_by_key, refs["supplierCostSourceKey"], "SupplierCost")
+            self.assertEqual(refs["supplierCostKey"], sap_by_key[refs["supplierCostSourceKey"]]["canonicalKey"])
+
+    def test_source_seed_is_deterministic_and_run_version_isolated(self) -> None:
+        source_seed = self.manifest["sourceSeed"]
+        payload = {
+            "scenarioId": source_seed["scenarioId"],
+            "scenarioVersion": source_seed["scenarioVersion"],
+            "datasetId": source_seed["datasetId"],
+            "seed": source_seed["seed"],
+            "sourceSystems": source_seed["sourceSystems"],
+        }
+        expected_digest = source_seed["idempotency"]["deterministicRecordDigestSha256"]
+        digest = hashlib.sha256(
+            json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+        self.assertEqual(expected_digest, digest)
+
+        isolation = source_seed["idempotency"]["runVersionIsolation"]
+        examples = isolation["examples"]
+        self.assertEqual(2, len(examples))
+        self.assertNotEqual(examples[0]["namespace"], examples[1]["namespace"])
+        for example in examples:
+            self.assertIn(example["runVersion"], example["namespace"])
+            self.assertEqual(
+                isolation["namespaceTemplate"].format(
+                    scenarioId=source_seed["scenarioId"],
+                    scenarioVersion=source_seed["scenarioVersion"],
+                    datasetId=source_seed["datasetId"],
+                    runVersion=example["runVersion"],
+                ),
+                example["namespace"],
+            )
+
+    def test_source_seed_excludes_invalid_or_missing_inputs(self) -> None:
+        source_seed = self.manifest["sourceSeed"]
+        seeded_source_keys = {
+            (record["sourceSystem"], record["sourceTenant"], record["sourceKey"])
+            for source_system in source_seed["sourceSystems"]
+            for record in source_system["records"]
+        }
+        seeded_records = {
+            (record["sourceSystem"], record["sourceTenant"], record["sourceKey"]): record
+            for source_system in source_seed["sourceSystems"]
+            for record in source_system["records"]
+        }
+        source_records_by_key = {
+            source_system["sourceSystem"]: {
+                record["sourceKey"]: record for record in source_system["records"]
+            }
+            for source_system in source_seed["sourceSystems"]
+        }
+        for invalid in source_seed["invalidInputScenarios"]:
+            with self.subTest(invalid=invalid["id"]):
+                self.assertFalse(invalid["representedInSeed"])
+                invalid_record = invalid["sourceRecord"]
+                identity = (
+                    invalid_record["sourceSystem"],
+                    invalid_record["sourceTenant"],
+                    invalid_record["sourceKey"],
+                )
+                self.assertNotIn(identity, seeded_source_keys)
+                self.assertNotIn(invalid_record["sourceKey"], source_records_by_key[invalid_record["sourceSystem"]])
+                self.assertEqual({}, seeded_records.get(identity, {}))
+
+                invalid_refs = invalid_record["refs"]
+                if "priceSourceKey" in invalid_refs:
+                    self.assertNotIn(invalid_refs["priceSourceKey"], source_records_by_key["oracle"])
+                if "accountSourceKey" in invalid_refs:
+                    self.assertNotIn(invalid_refs["accountSourceKey"], source_records_by_key["salesforce"])
+                if "partnerSourceKey" in invalid_refs:
+                    self.assertNotIn(
+                        invalid_refs["partnerSourceKey"],
+                        source_records_by_key["sap-plan-b-synthetic"],
+                    )
+                if "costCenterSourceKey" in invalid_refs:
+                    self.assertNotIn(
+                        invalid_refs["costCenterSourceKey"],
+                        source_records_by_key["sap-plan-b-synthetic"],
+                    )
+
+        self.assertEqual(
+            self.manifest["expectedEntityCounts"]["CommercialOrder"],
+            len(
+                {
+                    journey["expectedOutputs"]["orderKey"]
+                    for journey in self.manifest["journeys"]
+                    if "orderKey" in journey["expectedOutputs"]
+                }
+            ),
+        )
 
 
 if __name__ == "__main__":
