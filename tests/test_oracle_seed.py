@@ -92,6 +92,11 @@ class OracleSeedTests(unittest.TestCase):
         self.assertNotIn("F1_ORDER", sql)
         self.assertLess(max(len(line.encode("utf-8")) for line in sql.splitlines()), 2499)
 
+    def test_natural_identity_profile_does_not_change_oracle_seed(self) -> None:
+        natural = self.root / "natural-fixture"
+        generate_dataset(replace(self.parameters, output_path=natural, identity_profile="natural-v1"))
+        self.assertEqual(build_seed_sql(self.export_path), build_seed_sql(natural))
+
     def test_sql_text_escapes_quotes(self) -> None:
         self.assertEqual("'O''Brien'", _sql_text("O'Brien"))
 

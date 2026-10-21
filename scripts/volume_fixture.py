@@ -23,6 +23,8 @@ DEFAULT_DATASET_ID = "synthetic-gp-dataset-volume-v1"
 DEFAULT_PUBLICATION_KEY = "PUB-BULK-001"
 LEGACY_PROFILE = "single-event-v1"
 DEFAULT_CATALOG_PROFILE = "multi-event-v2"
+BASELINE_IDENTITY_PROFILE = "baseline-v1"
+NATURAL_IDENTITY_PROFILE = "natural-v1"
 
 # Logical source mappings, not qualified schemas or executable source adapters.
 # path: (source system, logical source entity, canonical entity, row key)
@@ -79,6 +81,7 @@ class GenerationParameters:
     dataset_id: str = DEFAULT_DATASET_ID
     if_exists: str = "error"
     catalog_profile: str = DEFAULT_CATALOG_PROFILE
+    identity_profile: str = BASELINE_IDENTITY_PROFILE
 
     def as_dict(self) -> dict[str, Any]:
         result = {
@@ -93,6 +96,8 @@ class GenerationParameters:
         }
         if self.catalog_profile != LEGACY_PROFILE:
             result["catalogProfile"] = self.catalog_profile
+        if self.identity_profile != BASELINE_IDENTITY_PROFILE:
+            result["identityProfile"] = self.identity_profile
         return result
 
     @property
@@ -137,6 +142,8 @@ class GenerationParameters:
             raise ValueError("if_exists must be error or verify-noop.")
         if self.catalog_profile not in {LEGACY_PROFILE, DEFAULT_CATALOG_PROFILE}:
             raise ValueError("Unsupported catalog_profile.")
+        if self.identity_profile not in {BASELINE_IDENTITY_PROFILE, NATURAL_IDENTITY_PROFILE}:
+            raise ValueError("Unsupported identity_profile.")
         if self.catalog_profile == DEFAULT_CATALOG_PROFILE and self.order_count < 36:
             raise ValueError("multi-event-v2 requires at least 36 orders to cover all events and saleable families.")
 
@@ -376,6 +383,83 @@ def _catalog_contexts(records: dict[str, list[dict[str, Any]]],
         contexts.append({"event": event, "session": session, "products": dict(products_by_code),
                          "prices": prices_by_product})
     return contexts
+
+
+def _natural_identity_values(data: dict, params: GenerationParameters) -> dict[str, dict]:
+    first_names = (
+        "Alba Bruno Carla Daniel Elena Felix Gabriela Hugo Ines Javier Kiara Leo "
+        "Marta Nico Olivia Pablo Raquel Sergio Teresa Vera Aina Adrian Bianca Diego "
+        "Emma Fabio Greta Hector Iris Jonas Laura Mateo"
+    ).split()
+    surnames = (
+        "Aranda Belmonte Cardenas Duarte Esteban Ferrer Galvan Herrero Ibarra Jurado "
+        "Ledesma Molina Navarro Ortega Paredes Quintana Robles Salcedo Torres Valera "
+        "Aguilar Benitez Cabrera Delgado Espinosa Fuentes Garrido Lozano Medina Nieto "
+        "Romero Serrano"
+    ).split()
+    company_modifiers = (
+        "Amber Aurora Azure Birch Bright Cedar Clear Coral Copper Crescent Crystal "
+        "Dawn Emerald Golden Granite Green Harbor Indigo Ivory Juniper Lunar Maple "
+        "Meadow Meridian Misty Nordic Oak Olive Opal Orchard Pacific Pine Quartz "
+        "River Silver Solar Summit Terra Velvet"
+    ).split()
+    company_roots = (
+        "Arc Bay Beacon Bridge Brook Coast Cove Crest Delta Field Forge Garden Grove "
+        "Haven Hill Horizon Isle Lake Leaf Marsh Mill Moon Peak Ridge Shore Sky "
+        "Spring Star Stone Trail Vale Wave West Wind Wood"
+    ).split()
+    company_sectors = ("Travel", "Hospitality", "Logistics", "Events", "Ventures", "Services", "Partners", "Holdings")
+    rng = _random_for(params.seed, params.namespace, NATURAL_IDENTITY_PROFILE)
+    person_offset = rng.randrange(len(first_names) * len(surnames) ** 2)
+    company_offset = rng.randrange(len(company_modifiers) * len(company_roots) * len(company_sectors))
+
+    def company_name(index: int) -> str:
+        value = index + company_offset
+        modifier = company_modifiers[value % len(company_modifiers)]
+        value //= len(company_modifiers)
+        root = company_roots[value % len(company_roots)]
+        value //= len(company_roots)
+        return f"{modifier} {root} {company_sectors[value % len(company_sectors)]}"
+
+    values: dict[str, dict] = {}
+    person_index, organization_index = 0, 0
+    parties = data["operational/party.jsonl"]
+    party_names = {}
+    for party in parties:
+        if party["partyType"] == "person":
+            value = person_index + person_offset
+            first = first_names[value % len(first_names)]
+            value //= len(first_names)
+            last = f"{surnames[value % len(surnames)]} {surnames[(value // len(surnames)) % len(surnames)]}"
+            attributes = {"firstName": first, "lastName": last, "displayName": f"{first} {last}"}
+            person_index += 1
+        else:
+            attributes = {"displayName": company_name(organization_index)}
+            organization_index += 1
+        party_names[party["partyKey"]] = attributes
+        values[party["sourceKey"]] = attributes
+    for row in data["salesforce/account.jsonl"]:
+        values[row["sourceKey"]] = {"displayName": party_names[row["partyKey"]]["displayName"]}
+    for row in data["salesforce/contact.jsonl"]:
+        values[row["sourceKey"]] = dict(party_names[row["partyKey"]])
+    supplier_names = {}
+    for index, row in enumerate(data["sap_plan_b/supplier.jsonl"]):
+        attributes = {"displayName": company_name(organization_index + index)}
+        values[row["sourceKey"]] = attributes
+        supplier_names[row["bpSourceKey"]] = attributes
+    for row in data["sap_plan_b/business_partner.jsonl"]:
+        attributes = ({"displayName": party_names[row["partyKey"]]["displayName"]}
+                      if row["bpRole"] == "Customer" else supplier_names[row["sourceKey"]])
+        values[row["sourceKey"]] = dict(attributes)
+    return values
+
+
+def _apply_natural_identities(data: dict, params: GenerationParameters) -> None:
+    values = _natural_identity_values(data, params)
+    for rows in data.values():
+        for row in rows:
+            if row["sourceKey"] in values:
+                row.update(values[row["sourceKey"]], identityProfile=NATURAL_IDENTITY_PROFILE)
 
 
 def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[dict[str, Any]]], dict[str, Any]]:
@@ -1968,6 +2052,8 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
 
     if rich:
         report["financialTotalsByEventSourceCurrency"] = _event_financial_totals(records)
+    if params.identity_profile == NATURAL_IDENTITY_PROFILE:
+        _apply_natural_identities(records, params)
     return records, report
 
 
@@ -2151,6 +2237,7 @@ def _validate_semantics(manifest: dict, data: dict, output_path: Path) -> None:
         seed=p["seed"], run_version=p["runVersion"], schema_version=p["schemaVersion"],
         scenario_id=p["scenarioId"], scenario_version=p["scenarioVersion"], dataset_id=p["datasetId"],
         catalog_profile=p.get("catalogProfile", LEGACY_PROFILE),
+        identity_profile=p.get("identityProfile", BASELINE_IDENTITY_PROFILE),
     )
     params.validate()
     _expect(p == params.as_dict(), "Unsupported or missing generation parameters.")
@@ -2324,6 +2411,15 @@ def _validate_semantics(manifest: dict, data: dict, output_path: Path) -> None:
                 "Contact/account Party crosswalk mismatch.")
         _expect(contact["email"] == parties[contact["partyKey"]]["email"], "Contact/Party email mismatch.")
         _expect(parties[contact["partyKey"]]["customerType"] == "fan", "Contact must resolve person fan, not organization.")
+    if params.identity_profile == NATURAL_IDENTITY_PROFILE:
+        expected_identities = _natural_identity_values(data, params)
+        for rows in data.values():
+            for row in rows:
+                if row["sourceKey"] in expected_identities:
+                    _expect(row.get("identityProfile") == NATURAL_IDENTITY_PROFILE
+                            and all(row.get(field) == value
+                                    for field, value in expected_identities[row["sourceKey"]].items()),
+                            "Natural synthetic identity attributes or cross-source names mismatch.")
 
     bundles: dict[str, list] = defaultdict(list)
     _expect(len(products) == (288 if rich else 4) and len(prices) == (1152 if rich else 4)
@@ -2766,6 +2862,11 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Versioned catalogue profile; single-event-v1 preserves the original 13-row Oracle baseline.",
     )
     generate_parser.add_argument(
+        "--identity-profile", choices=(BASELINE_IDENTITY_PROFILE, NATURAL_IDENTITY_PROFILE),
+        default=BASELINE_IDENTITY_PROFILE,
+        help="Select natural-v1 explicitly for demo names; preserves source/canonical keys.",
+    )
+    generate_parser.add_argument(
         "--run-version",
         default=DEFAULT_RUN_VERSION,
         help="Run-version namespace token (default: run-v1).",
@@ -2820,6 +2921,7 @@ def main(argv: list[str] | None = None) -> int:
             dataset_id=args.dataset_id,
             if_exists=args.if_exists,
             catalog_profile=args.catalog_profile,
+            identity_profile=args.identity_profile,
         )
         try:
             result = generate_dataset(params)

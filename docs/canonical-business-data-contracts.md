@@ -127,6 +127,46 @@ event-scoped dependent records also expose `eventKey`; consumers must join by
 keys and use manifest counts, not assume singleton events or fixed census.
 The original small P1 scenario is unchanged and independent of both profiles.
 
+### Demo identity presentation
+
+For the next demo sample/export, **explicitly select `--identity-profile natural-v1`**:
+
+```text
+python -m scripts.volume_fixture generate --output-path <new-demo-output-folder> --catalog-profile multi-event-v2 --identity-profile natural-v1
+python -m scripts.volume_fixture validate --output-path <new-demo-output-folder>
+```
+
+This user-directed #18 follow-up combines fixed, hand-authored name components
+deterministically; it does not use real-person records, external directories or
+customer data. Person Party/Contact rows have `firstName`, `lastName` and a
+matching `displayName`; the fan Account uses that same display name without
+creating another Party. Business and sponsor Parties/Accounts have plausible
+fictional company display names, no invented person Contacts. SAP Customer
+business partners use their Party's display name; Supplier partners and supplier
+masters share a generated company name. Contacts retain the reserved
+`example.test` email addresses; no phone numbers, postal addresses or actionable
+contact details are introduced. Coincidental matches to real names or companies
+are possible; these names are not identity evidence or globally unique identifiers.
+
+Synthetic provenance stays explicit in metadata (`syntheticProvenance`,
+`dataOrigin`, `identityProfile`) and the manifest, **not in a `Synthetic Customer`
+prefix or trial marker in Name/FirstName/LastName**. Native Salesforce field
+mapping/loading is separately owned by #20; this logical export does not create
+fields or authorize source writes. A loader should map Contact FirstName/LastName
+from their structured values and Account Name from `displayName`, keeping any
+operational marker outside visible names.
+
+`identityProfile` is recorded in parameters and therefore the dataset digest,
+but deliberately **does not enter the namespace/key hash**: changing presentation
+attributes preserves every source/canonical key, relationship, population and
+financial total. All Oracle catalogue rows remain byte-identical, so this
+identity-only change does not require Oracle reload. Use a new output folder;
+`verify-noop` refuses a mismatch instead of overwriting an earlier profile.
+The default `baseline-v1` omits the new parameter and preserves both historical
+catalogue profiles byte-for-byte, including old manifests. Keeping that default
+is for reproducibility, not permission to use placeholder names in the next demo.
+The fixed small P1 scenario is not renamed.
+
 `multi-event-v2` requires **at least 36 orders** to cover all 12 events and three
 saleable families. Smaller regression runs can explicitly select
 `single-event-v1`. These are local exports, not a live reseed approval. Before
