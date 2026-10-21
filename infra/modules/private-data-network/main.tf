@@ -40,6 +40,21 @@ resource "azurerm_network_security_group" "oracle" {
   resource_group_name = var.resource_group_name
   tags                = var.tags
 
+  dynamic "security_rule" {
+    for_each = var.oracle_additional_security_rules
+    content {
+      name                       = security_rule.value.name
+      priority                   = security_rule.value.priority
+      direction                  = security_rule.value.direction
+      access                     = "Allow"
+      protocol                   = security_rule.value.protocol
+      source_port_range          = "*"
+      destination_port_ranges    = security_rule.value.destination_port_ranges
+      source_address_prefix      = security_rule.value.source_address_prefix
+      destination_address_prefix = security_rule.value.destination_address_prefix
+    }
+  }
+
   security_rule {
     name                       = "allow-gateway-oracle-listener"
     priority                   = 100
@@ -86,6 +101,21 @@ resource "azurerm_network_security_group" "gateway" {
   location            = var.location
   resource_group_name = var.resource_group_name
   tags                = var.tags
+
+  dynamic "security_rule" {
+    for_each = var.gateway_additional_security_rules
+    content {
+      name                       = security_rule.value.name
+      priority                   = security_rule.value.priority
+      direction                  = security_rule.value.direction
+      access                     = "Allow"
+      protocol                   = security_rule.value.protocol
+      source_port_range          = "*"
+      destination_port_ranges    = security_rule.value.destination_port_ranges
+      source_address_prefix      = security_rule.value.source_address_prefix
+      destination_address_prefix = security_rule.value.destination_address_prefix
+    }
+  }
 
   security_rule {
     name                       = "deny-all-inbound"

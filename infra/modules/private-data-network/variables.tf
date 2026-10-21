@@ -126,6 +126,36 @@ variable "gateway_private_ip" {
   }
 }
 
+variable "oracle_additional_security_rules" {
+  description = "Optional extra NSG rules for the Oracle subnet; priorities must stay below 4095. Empty keeps the strict default."
+  type = list(object({
+    name                       = string
+    priority                   = number
+    direction                  = string
+    protocol                   = string
+    destination_port_ranges    = list(string)
+    source_address_prefix      = string
+    destination_address_prefix = string
+  }))
+  default  = []
+  nullable = false
+}
+
+variable "gateway_additional_security_rules" {
+  description = "Optional extra NSG rules for the gateway subnet; priorities must stay below 4095. Empty keeps the strict default."
+  type = list(object({
+    name                       = string
+    priority                   = number
+    direction                  = string
+    protocol                   = string
+    destination_port_ranges    = list(string)
+    source_address_prefix      = string
+    destination_address_prefix = string
+  }))
+  default  = []
+  nullable = false
+}
+
 variable "tags" {
   description = "Non-sensitive resource tags supplied by the owning root."
   type        = map(string)
