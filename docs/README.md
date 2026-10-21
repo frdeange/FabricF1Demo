@@ -9,6 +9,8 @@ Implemented documentation:
 - [DEV identity pilot](dev-identity-pilot.md) (#8).
 - [Engineering conventions](engineering/README.md) (#22).
 
-[Runbooks](runbooks/README.md) reserve the operational/rebuild entry point.
+[Runbooks](runbooks/README.md) include the
+[Oracle/gateway reconstruction checklist](runbooks/oracle-gateway-reconstruction.md)
+and its remaining manual/automation qualification gates.
 Existing flat documentation paths are stable; do not move another package's
 guide merely to populate a new folder. The execution plan remains at the root.

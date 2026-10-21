@@ -18,7 +18,7 @@
     {"path": "sources/salesforce/README.md", "purpose": "Salesforce native metadata and seed adapters", "issues": [20], "status": "reserved"},
     {"path": "sources/sap/README.md", "purpose": "Distinct synthetic Plan B and conditional real Plan A", "issues": [6, 15], "status": "reserved"},
     {"path": "sources/sports/README.md", "purpose": "Authorized replay and live source adapters", "issues": [7], "status": "reserved"},
-    {"path": "infra/README.md", "purpose": "IaC and bootstrap ownership boundary", "issues": [3, 21], "status": "reserved"},
+    {"path": "infra/README.md", "purpose": "IaC and bootstrap ownership boundary", "issues": [3, 21], "status": "partial"},
     {"path": "fabric/README.md", "purpose": "Native Fabric definition entry point", "issues": [4], "status": "reserved"},
     {"path": "fabric/workspace/README.md", "purpose": "Single native definition root", "issues": [4], "status": "reserved"},
     {"path": "fabric/workspace/ingestion/README.md", "purpose": "Qualified native source ingestion items", "issues": [19, 20, 6], "status": "reserved"},
@@ -37,7 +37,8 @@
     {"path": "docs/engineering/README.md", "purpose": "Engineering guidance navigation", "issues": [22], "status": "implemented"},
     {"path": "docs/engineering/repository-layout.md", "purpose": "Placement and naming contract", "issues": [22], "status": "implemented"},
     {"path": "docs/engineering/agent-playbook.md", "purpose": "Bounded agent handoffs and review", "issues": [22], "status": "implemented"},
-    {"path": "docs/runbooks/README.md", "purpose": "Operational and reconstruction runbook entry point", "issues": [3, 13], "status": "reserved"},
+    {"path": "docs/runbooks/README.md", "purpose": "Operational and reconstruction runbook entry point", "issues": [3, 13], "status": "partial"},
+    {"path": "docs/runbooks/oracle-gateway-reconstruction.md", "purpose": "Oracle/gateway commissioning lessons and reconstruction gates", "issues": [3, 19, 21], "status": "partial"},
     {"path": "docs/deployment-ownership-support-matrix.md", "purpose": "Single-writer and qualification contract", "issues": [3, 8], "status": "partial"},
     {"path": "docs/dev-identity-pilot.md", "purpose": "Implemented read-only identity pilot and its limits", "issues": [8], "status": "implemented"}
   ]
