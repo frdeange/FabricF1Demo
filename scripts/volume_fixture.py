@@ -6,7 +6,7 @@ import hashlib
 import json
 import random
 from collections import Counter, defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -25,6 +25,8 @@ LEGACY_PROFILE = "single-event-v1"
 DEFAULT_CATALOG_PROFILE = "multi-event-v2"
 BASELINE_IDENTITY_PROFILE = "baseline-v1"
 NATURAL_IDENTITY_PROFILE = "natural-v1"
+VOLUME_DATA_PROFILE = "volume-v1"
+DEMO_DATA_PROFILE = "crm-demo-v1"
 
 # Logical source mappings, not qualified schemas or executable source adapters.
 # path: (source system, logical source entity, canonical entity, row key)
@@ -82,6 +84,7 @@ class GenerationParameters:
     if_exists: str = "error"
     catalog_profile: str = DEFAULT_CATALOG_PROFILE
     identity_profile: str = BASELINE_IDENTITY_PROFILE
+    data_profile: str = VOLUME_DATA_PROFILE
 
     def as_dict(self) -> dict[str, Any]:
         result = {
@@ -98,6 +101,8 @@ class GenerationParameters:
             result["catalogProfile"] = self.catalog_profile
         if self.identity_profile != BASELINE_IDENTITY_PROFILE:
             result["identityProfile"] = self.identity_profile
+        if self.data_profile != VOLUME_DATA_PROFILE:
+            result["dataProfile"] = self.data_profile
         return result
 
     @property
@@ -105,6 +110,8 @@ class GenerationParameters:
         dimensions = [self.scenario_id, self.scenario_version, self.dataset_id, self.run_version, self.seed]
         if self.catalog_profile != LEGACY_PROFILE:
             dimensions.append(self.catalog_profile)
+        if self.data_profile != VOLUME_DATA_PROFILE:
+            dimensions.append(self.data_profile)
         return json.dumps(
             dimensions,
             separators=(",", ":"),
@@ -119,7 +126,19 @@ class GenerationParameters:
         return f"synthetic-{self.key_token}"
 
     @property
+    def master_key_token(self) -> str:
+        if self.data_profile == VOLUME_DATA_PROFILE:
+            return self.key_token
+        return replace(self, data_profile=VOLUME_DATA_PROFILE).key_token
+
+    @property
+    def master_source_tenant(self) -> str:
+        return f"synthetic-{self.master_key_token}"
+
+    @property
     def business_customer_count(self) -> int:
+        if self.data_profile == DEMO_DATA_PROFILE:
+            return 30
         return max(1, self.customer_count // 5)
 
     @property
@@ -144,6 +163,14 @@ class GenerationParameters:
             raise ValueError("Unsupported catalog_profile.")
         if self.identity_profile not in {BASELINE_IDENTITY_PROFILE, NATURAL_IDENTITY_PROFILE}:
             raise ValueError("Unsupported identity_profile.")
+        if self.data_profile not in {VOLUME_DATA_PROFILE, DEMO_DATA_PROFILE}:
+            raise ValueError("Unsupported data_profile.")
+        if self.data_profile == DEMO_DATA_PROFILE and (
+            self.customer_count != 430 or self.order_count != 1500
+            or self.identity_profile != NATURAL_IDENTITY_PROFILE
+            or self.catalog_profile != DEFAULT_CATALOG_PROFILE
+        ):
+            raise ValueError("crm-demo-v1 requires 430 customers, 1500 orders, multi-event-v2 and natural-v1.")
         if self.catalog_profile == DEFAULT_CATALOG_PROFILE and self.order_count < 36:
             raise ValueError("multi-event-v2 requires at least 36 orders to cover all events and saleable families.")
 
@@ -409,7 +436,8 @@ def _natural_identity_values(data: dict, params: GenerationParameters) -> dict[s
         "Spring Star Stone Trail Vale Wave West Wind Wood"
     ).split()
     company_sectors = ("Travel", "Hospitality", "Logistics", "Events", "Ventures", "Services", "Partners", "Holdings")
-    rng = _random_for(params.seed, params.namespace, NATURAL_IDENTITY_PROFILE)
+    name_namespace = replace(params, data_profile=VOLUME_DATA_PROFILE).namespace
+    rng = _random_for(params.seed, name_namespace, NATURAL_IDENTITY_PROFILE)
     person_offset = rng.randrange(len(first_names) * len(surnames) ** 2)
     company_offset = rng.randrange(len(company_modifiers) * len(company_roots) * len(company_sectors))
 
@@ -434,14 +462,24 @@ def _natural_identity_values(data: dict, params: GenerationParameters) -> dict[s
             attributes = {"firstName": first, "lastName": last, "displayName": f"{first} {last}"}
             person_index += 1
         else:
-            attributes = {"displayName": company_name(organization_index)}
+            company_index = organization_index
+            if params.data_profile == DEMO_DATA_PROFILE and party["partyRole"] == "sponsor":
+                company_index += 1970
+            attributes = {"displayName": company_name(company_index)}
             organization_index += 1
         party_names[party["partyKey"]] = attributes
         values[party["sourceKey"]] = attributes
     for row in data["salesforce/account.jsonl"]:
         values[row["sourceKey"]] = {"displayName": party_names[row["partyKey"]]["displayName"]}
     for row in data["salesforce/contact.jsonl"]:
-        values[row["sourceKey"]] = dict(party_names[row["partyKey"]])
+        if row.get("contactRole") in {"buyer", "admin", "billing"}:
+            value = person_offset + 8000 + row["interlocutorOrdinal"]
+            first = first_names[value % len(first_names)]
+            value //= len(first_names)
+            last = f"{surnames[value % len(surnames)]} {surnames[(value // len(surnames)) % len(surnames)]}"
+            values[row["sourceKey"]] = {"firstName": first, "lastName": last, "displayName": f"{first} {last}"}
+        else:
+            values[row["sourceKey"]] = dict(party_names[row["partyKey"]])
     supplier_names = {}
     for index, row in enumerate(data["sap_plan_b/supplier.jsonl"]):
         attributes = {"displayName": company_name(organization_index + index)}
@@ -484,6 +522,8 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
     session_key = f"SES-BULK-{run_token}-001"
     campaign_key = f"CAMPAIGN-BULK-{run_token}-001"
     source_tenant = params.source_tenant
+    master_token = params.master_key_token
+    master_tenant = params.master_source_tenant
     publication_key = f"{DEFAULT_PUBLICATION_KEY}-{run_token}"
 
     product_defs = [
@@ -710,9 +750,10 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
     contact_keys: list[str | None] = []
     for index in range(1, params.customer_count + 1):
         is_business = index > params.fan_customer_count
-        party_key = f"PTY-CUST-{run_token}-{index:05}"
-        account_key = f"SF-ACCOUNT-{run_token}-{index:05}"
-        contact_key = f"SF-CONTACT-{run_token}-{index:05}"
+        master_index = index + 7600 if is_business and params.data_profile == DEMO_DATA_PROFILE else index
+        party_key = f"PTY-CUST-{master_token}-{master_index:05}"
+        account_key = f"SF-ACCOUNT-{master_token}-{master_index:05}"
+        contact_key = f"SF-CONTACT-{master_token}-{master_index:05}"
         customer_party_keys.append(party_key)
         customer_account_keys.append(account_key)
         contact_keys.append(None if is_business else contact_key)
@@ -720,7 +761,7 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
         party_record = _build_common(
             canonical_key=party_key,
             source_system="salesforce",
-            source_tenant=source_tenant,
+            source_tenant=master_tenant,
             source_entity="Account" if is_business else "Contact",
             source_key=account_key if is_business else contact_key,
             source_updated_at=_iso(master_at),
@@ -736,7 +777,7 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
                 "partyRole": "customer",
                 "customerType": "business" if is_business else "fan",
                 "displayName": f"Synthetic Business Customer {index:05}" if is_business else f"Synthetic Customer {index:05}",
-                "email": None if is_business else f"customer.{index:05}@example.test",
+                "email": None if is_business else f"customer.{master_index:05}@example.test",
                 "accountSourceKey": account_key,
             }
         )
@@ -745,7 +786,7 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
         account_record = _build_common(
             canonical_key=account_key,
             source_system="salesforce",
-            source_tenant=source_tenant,
+            source_tenant=master_tenant,
             source_entity="Account",
             source_key=account_key,
             source_updated_at=party_record["sourceUpdatedAt"],
@@ -770,7 +811,7 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
         contact_record = _build_common(
             canonical_key=contact_key,
             source_system="salesforce",
-            source_tenant=source_tenant,
+            source_tenant=master_tenant,
             source_entity="Contact",
             source_key=contact_key,
             source_updated_at=party_record["sourceUpdatedAt"],
@@ -820,12 +861,12 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
     sponsor_party_count = max(8, params.customer_count // 2_000)
     sponsor_account_records: list[dict[str, Any]] = []
     for index in range(1, sponsor_party_count + 1):
-        party_key = f"PTY-SPONSOR-{run_token}-{index:03}"
-        account_key = f"SF-SPONSOR-ACCOUNT-{run_token}-{index:03}"
+        party_key = f"PTY-SPONSOR-{master_token}-{index:03}"
+        account_key = f"SF-SPONSOR-ACCOUNT-{master_token}-{index:03}"
         sponsor_party = _build_common(
             canonical_key=party_key,
             source_system="salesforce",
-            source_tenant=source_tenant,
+            source_tenant=master_tenant,
             source_entity="Account",
             source_key=account_key,
             source_updated_at=_iso(master_at),
@@ -849,7 +890,7 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
         sponsor_account = _build_common(
             canonical_key=account_key,
             source_system="salesforce",
-            source_tenant=source_tenant,
+            source_tenant=master_tenant,
             source_entity="Account",
             source_key=account_key,
             source_updated_at=sponsor_party["sourceUpdatedAt"],
@@ -869,6 +910,28 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
         )
         sponsor_account_records.append(sponsor_account)
         _append_record(records, "salesforce/account.jsonl", sponsor_account)
+
+    if params.data_profile == DEMO_DATA_PROFILE:
+        accounts_by_party = {r["partyKey"]: r for r in records["salesforce/account.jsonl"]}
+        ordinal = 0
+        for party in records["operational/party.jsonl"]:
+            if party["partyType"] != "organization":
+                continue
+            account = accounts_by_party[party["partyKey"]]
+            for role in ("buyer", "admin", "billing"):
+                contact_key = f"{account['accountKey']}-CONTACT-{role.upper()}"
+                contact = _build_common(
+                    canonical_key=contact_key, source_system="salesforce", source_tenant=master_tenant,
+                    source_entity="Contact", source_key=contact_key,
+                    source_updated_at=_iso(master_at), ingested_at=_iso(master_at + timedelta(minutes=4)),
+                    schema_version=params.schema_version, record_state="active", publication_key=publication_key,
+                )
+                contact.update(contactKey=contact_key, accountSourceKey=account["accountKey"],
+                               partyKey=party["partyKey"], contactRole=role, interlocutorOrdinal=ordinal,
+                               displayName="Pending generated interlocutor",
+                               email=f"interlocutor.{ordinal + 1:03}@example.test")
+                ordinal += 1
+                _append_record(records, "salesforce/contact.jsonl", contact)
 
     vendor_master_count = max(6, params.order_count // 5_000)
     for index in range(1, vendor_master_count + 1):
@@ -1254,8 +1317,10 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
             )
             _append_record(records, "salesforce/opportunity.jsonl", opportunity_record)
 
-    credit_count = max(1, params.order_count // 50)
+    credit_count = 40 if params.data_profile == DEMO_DATA_PROFILE else max(1, params.order_count // 50)
     pinned_credit_orders = [1, 2, 11, 22] if credit_count >= 4 else [1]
+    if params.data_profile == DEMO_DATA_PROFILE:
+        pinned_credit_orders = list(range(1, 13)) + [22]
     candidates = [i for i in range(max(pinned_credit_orders) + 1, params.order_count + 1)]
     credit_order_indexes = sorted(pinned_credit_orders + rng.sample(candidates, credit_count - len(pinned_credit_orders)))
     for credit_idx, order_index in enumerate(credit_order_indexes, start=1):
@@ -1868,14 +1933,20 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
     billing_partners = {}
     for index, party in enumerate(parties, start=1):
         original_entity, original_key = party["sourceEntity"], party["sourceKey"]
+        projection_index = index
+        if params.data_profile == DEMO_DATA_PROFILE:
+            if 400 < index <= 430:
+                projection_index += 7600
+            elif index > 430:
+                projection_index += 9570
         party.update(
             sourceSystem="canonical-projection",
             sourceEntity="SalesforcePartyProjection",
-            sourceKey=f"PROJECTION-PARTY-{run_token}-{index:05}",
+            sourceKey=f"PROJECTION-PARTY-{master_token}-{projection_index:05}",
             projectionKind="canonical-party-crosswalk",
             businessOwner="Salesforce",
             sourceReference={
-                "sourceSystem": "salesforce", "sourceTenant": source_tenant,
+                "sourceSystem": "salesforce", "sourceTenant": master_tenant,
                 "sourceEntity": original_entity, "sourceKey": original_key,
             },
         )
@@ -2054,6 +2125,8 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
         report["financialTotalsByEventSourceCurrency"] = _event_financial_totals(records)
     if params.identity_profile == NATURAL_IDENTITY_PROFILE:
         _apply_natural_identities(records, params)
+    if params.data_profile == DEMO_DATA_PROFILE:
+        report["crmDemoPlan"] = _crm_demo_plan(records, params)
     return records, report
 
 
@@ -2201,6 +2274,121 @@ def _physical_demand(product_key: str, products: dict, bundles: dict, quantity: 
     return Counter({zone: quantity * units for zone, units in products[product_key]["capacityPerUnit"].items()})
 
 
+def _crm_demo_plan(data: dict, params: GenerationParameters) -> dict:
+    events = sorted(r["eventKey"] for r in data["oracle/oracle_event.jsonl"])
+    orders = {r["orderKey"]: r for r in data["operational/commercial_order.jsonl"]}
+
+    def select_per_event(path: str) -> list[dict]:
+        selected = []
+        for event in events:
+            eligible = sorted((r for r in data[path] if orders[r["orderKey"]]["eventKey"] == event),
+                              key=lambda r: r["sourceKey"])
+            _expect(len(eligible) >= 10, f"CRM demo selection lacks ten eligible rows for {path}/{event}.")
+            selected.extend(eligible[:10])
+        return selected
+
+    selected = {
+        "salesforce/account.jsonl": data["salesforce/account.jsonl"],
+        "salesforce/contact.jsonl": data["salesforce/contact.jsonl"],
+        "salesforce/consent.jsonl": data["salesforce/consent.jsonl"],
+        "salesforce/campaign.jsonl": data["salesforce/campaign.jsonl"],
+        "salesforce/campaign_touch.jsonl": select_per_event("salesforce/campaign_touch.jsonl"),
+        "salesforce/opportunity.jsonl": select_per_event("salesforce/opportunity.jsonl"),
+        "salesforce/case.jsonl": data["salesforce/case.jsonl"],
+        "salesforce/sponsorship_agreement.jsonl": data["salesforce/sponsorship_agreement.jsonl"],
+        "salesforce/sponsorship_commitment.jsonl": data["salesforce/sponsorship_commitment.jsonl"],
+    }
+    candidates = {
+        "salesforce/account.jsonl": "Account", "salesforce/contact.jsonl": "Contact",
+        "salesforce/campaign.jsonl": "Campaign", "salesforce/opportunity.jsonl": "Opportunity",
+        "salesforce/case.jsonl": "Case",
+    }
+    family_plan = {
+        path: {"selectedCount": len(rows), "sourceKeys": sorted(r["sourceKey"] for r in rows),
+               "candidateObject": candidates.get(path), "physicalMappingStatus": "unqualified"}
+        for path, rows in sorted(selected.items())
+    }
+    logical_total = sum(len(rows) for rows in selected.values())
+    _expect(logical_total == 1668, "Unexpected logical CRM demo budget.")
+    _expect({r["eventKey"] for r in selected["salesforce/case.jsonl"]} == set(events),
+            "CRM demo cases lack event coverage.")
+    customer_ids = list(range(1, 401)) + list(range(8001, 8031))
+    return {
+        "version": DEMO_DATA_PROFILE,
+        "selectionRule": "All masters, consents, campaigns, cases and sponsor pairs; ten eligible touches and opportunities per event by stable source key.",
+        "families": family_plan,
+        "selectionDigestSha256": _sha256_bytes(_json_line(family_plan).encode("utf-8")),
+        "logicalSelectedRows": logical_total,
+        "sharedAuxiliaryReserveRows": 120,
+        "plannedRowsIncludingReserve": logical_total + 120,
+        "recordLimit": 2000,
+        "unassignedHeadroomRows": 2000 - logical_total - 120,
+        "physicalRows": None,
+        "physicalStorageBytes": None,
+        "loadStatus": "blocked-unqualified-mappings-and-auxiliary-amplification",
+        "operationalOrderCount": len(orders),
+        "orderImportStatus": "excluded-operational-owner",
+        "masterSelection": {
+            "volumeNamespace": replace(params, data_profile=VOLUME_DATA_PROFILE).namespace,
+            "sourceTenant": params.master_source_tenant,
+            "customerPartyKeys": [f"PTY-CUST-{params.master_key_token}-{i:05}" for i in customer_ids],
+            "sponsorPartyKeys": [f"PTY-SPONSOR-{params.master_key_token}-{i:03}" for i in range(1, 9)],
+            "crosswalk": [
+                {"partyKey": row["partyKey"], "sourceReference": row["sourceReference"]}
+                for row in data["operational/party.jsonl"]
+            ],
+        },
+    }
+
+
+def _validate_demo_identity_domains(data: dict, params: GenerationParameters) -> None:
+    shared_paths = {"operational/party.jsonl", "salesforce/account.jsonl", "salesforce/contact.jsonl"}
+    for path, rows in data.items():
+        token = params.master_key_token if path in shared_paths else params.key_token
+        _expect(all(token in row["sourceKey"] for row in rows), f"{path}: wrong identity domain.")
+        key_field = FILE_SPECS[path][3]
+        _expect(all(token in row[key_field] for row in rows), f"{path}: wrong canonical/row identity domain.")
+        _expect(all(params.key_token in row["idempotencyKey"] for row in rows if "idempotencyKey" in row),
+                f"{path}: wrong command idempotency domain.")
+    expected_parties = {}
+    for index in list(range(1, 401)) + list(range(8001, 8031)):
+        party_key = f"PTY-CUST-{params.master_key_token}-{index:05}"
+        account_key = f"SF-ACCOUNT-{params.master_key_token}-{index:05}"
+        origin_key = f"SF-CONTACT-{params.master_key_token}-{index:05}" if index <= 400 else account_key
+        expected_parties[party_key] = (account_key, origin_key, index)
+    for index in range(1, 9):
+        party_key = f"PTY-SPONSOR-{params.master_key_token}-{index:03}"
+        account_key = f"SF-SPONSOR-ACCOUNT-{params.master_key_token}-{index:03}"
+        expected_parties[party_key] = (account_key, account_key, index + 10000)
+    parties = data["operational/party.jsonl"]
+    _expect({r["partyKey"] for r in parties} == set(expected_parties), "Demo master selection differs from volume crosswalk.")
+    for party in parties:
+        account_key, origin_key, projection_index = expected_parties[party["partyKey"]]
+        _expect(party["sourceReference"]["sourceKey"] == origin_key
+                and party["sourceKey"] == f"PROJECTION-PARTY-{params.master_key_token}-{projection_index:05}",
+                "Demo Party source identity differs from volume.")
+        if party["partyRole"] == "customer":
+            _expect(party["accountSourceKey"] == account_key, "Demo Account differs from volume.")
+    for account in data["salesforce/account.jsonl"]:
+        _expect(account["sourceKey"] == expected_parties[account["partyKey"]][0],
+                "Demo Account identity differs from volume.")
+    ordinal = 0
+    contacts = {r["sourceKey"]: r for r in data["salesforce/contact.jsonl"]}
+    for party in parties:
+        if party["partyType"] == "person":
+            origin = expected_parties[party["partyKey"]][1]
+            _expect(origin in contacts and contacts[origin]["partyKey"] == party["partyKey"],
+                    "Demo fan Contact differs from volume.")
+        else:
+            account_key = expected_parties[party["partyKey"]][0]
+            for role in ("buyer", "admin", "billing"):
+                contact_key = f"{account_key}-CONTACT-{role.upper()}"
+                _expect(contact_key in contacts
+                        and contacts[contact_key].get("interlocutorOrdinal") == ordinal,
+                        "B2B interlocutor ordinal/identity mismatch.")
+                ordinal += 1
+
+
 def _validate_event_links(data: dict, event_keys: set[str]) -> None:
     shared_paths = {
         "operational/party.jsonl", "salesforce/account.jsonl", "salesforce/contact.jsonl",
@@ -2238,6 +2426,7 @@ def _validate_semantics(manifest: dict, data: dict, output_path: Path) -> None:
         scenario_id=p["scenarioId"], scenario_version=p["scenarioVersion"], dataset_id=p["datasetId"],
         catalog_profile=p.get("catalogProfile", LEGACY_PROFILE),
         identity_profile=p.get("identityProfile", BASELINE_IDENTITY_PROFILE),
+        data_profile=p.get("dataProfile", VOLUME_DATA_PROFILE),
     )
     params.validate()
     _expect(p == params.as_dict(), "Unsupported or missing generation parameters.")
@@ -2266,7 +2455,8 @@ def _validate_semantics(manifest: dict, data: dict, output_path: Path) -> None:
         if isinstance(value, dict):
             for field, item in value.items():
                 if (field.endswith("Key") or field == "idempotencyKey") and item is not None:
-                    _expect(isinstance(item, str) and params.key_token in item, f"Key outside namespace: {field}")
+                    _expect(isinstance(item, str) and any(token in item for token in
+                            (params.key_token, params.master_key_token)), f"Key outside namespace: {field}")
                 if field.endswith("Minor"):
                     _expect(type(item) is int and item >= 0, f"Money must be nonnegative integer minor units: {field}")
                 if field in {"quantity", "lineQuantity", "quantityGranted", "lineCount"}:
@@ -2282,6 +2472,10 @@ def _validate_semantics(manifest: dict, data: dict, output_path: Path) -> None:
         for row in rows:
             _expect(isinstance(row, dict), f"{path}: record must be an object.")
             for field, value in scope.items():
+                if field == "sourceTenant" and path in {
+                    "operational/party.jsonl", "salesforce/account.jsonl", "salesforce/contact.jsonl"
+                }:
+                    value = params.master_source_tenant
                 _expect(row.get(field) == value, f"{path}: scope mismatch: {field}")
             _expect(row.get("syntheticProvenance") == "synthetic-only", "Missing synthetic provenance.")
             _expect(row["sourceSystem"] == system and row["sourceEntity"] == entity, f"{path}: wrong source scope/entity.")
@@ -2386,7 +2580,9 @@ def _validate_semantics(manifest: dict, data: dict, output_path: Path) -> None:
             and len(fan_customers) == expected_population["fanCustomerParties"]
             and len(business_customers) == expected_population["businessCustomerParties"]
             and len(sponsors) == expected_population["sponsorParties"]
-            and len(accounts) == len(parties) and len(contacts) == len(fan_customers), "Actual party/account/contact populations mismatch.")
+            and len(accounts) == len(parties)
+            and len(contacts) == len(fan_customers) + (114 if params.data_profile == DEMO_DATA_PROFILE else 0),
+            "Actual party/account/contact populations mismatch.")
     for party in parties.values():
         _expect((party["partyRole"], party["customerType"], party["partyType"]) in {
             ("customer", "fan", "person"), ("customer", "business", "organization"), ("sponsor", None, "organization"),
@@ -2409,8 +2605,20 @@ def _validate_semantics(manifest: dict, data: dict, output_path: Path) -> None:
     for contact in contacts.values():
         _expect(contact["accountSourceKey"] in accounts and accounts[contact["accountSourceKey"]]["partyKey"] == contact["partyKey"],
                 "Contact/account Party crosswalk mismatch.")
-        _expect(contact["email"] == parties[contact["partyKey"]]["email"], "Contact/Party email mismatch.")
-        _expect(parties[contact["partyKey"]]["customerType"] == "fan", "Contact must resolve person fan, not organization.")
+        party = parties[contact["partyKey"]]
+        if params.data_profile == DEMO_DATA_PROFILE and party["partyType"] == "organization":
+            _expect(contact.get("contactRole") in {"buyer", "admin", "billing"}
+                    and contact["canonicalEntity"] is None
+                    and contact["sourceKey"] == f"{contact['accountSourceKey']}-CONTACT-{contact['contactRole'].upper()}",
+                    "Invalid source-only B2B interlocutor identity/role.")
+        else:
+            _expect(contact["email"] == party["email"], "Contact/Party email mismatch.")
+            _expect(party["customerType"] == "fan", "Contact must resolve person fan, not organization.")
+    if params.data_profile == DEMO_DATA_PROFILE:
+        for party in parties.values():
+            if party["partyType"] == "organization":
+                _expect(Counter(c.get("contactRole") for c in contacts.values() if c["partyKey"] == party["partyKey"])
+                        == Counter({"buyer": 1, "admin": 1, "billing": 1}), "B2B interlocutor role coverage mismatch.")
     if params.identity_profile == NATURAL_IDENTITY_PROFILE:
         expected_identities = _natural_identity_values(data, params)
         for rows in data.values():
@@ -2539,7 +2747,9 @@ def _validate_semantics(manifest: dict, data: dict, output_path: Path) -> None:
     reservations = per_order("operational/reservation.jsonl")
     credits = index("operational/scenario_credit.jsonl", "scenarioCreditKey")
     credits_by_order = {r["orderKey"]: r for r in credits.values()}
-    _expect(len(credits_by_order) == len(credits) == max(1, params.order_count // 50), "Credit population/coverage mismatch.")
+    _expect(len(credits_by_order) == len(credits) == (
+        40 if params.data_profile == DEMO_DATA_PROFILE else max(1, params.order_count // 50)),
+        "Credit population/coverage mismatch.")
     cases = index("salesforce/case.jsonl", "caseKey")
     _expect(len(cases) == len(credits), "Case count mismatch.")
     active_demand = Counter()
@@ -2815,6 +3025,10 @@ def _validate_semantics(manifest: dict, data: dict, output_path: Path) -> None:
     if rich:
         _expect(manifest["financialTotalsByEventSourceCurrency"] == _event_financial_totals(data),
                 "Per-event/source/currency financial totals mismatch.")
+    if params.data_profile == DEMO_DATA_PROFILE:
+        _validate_demo_identity_domains(data, params)
+        _expect(manifest.get("crmDemoPlan") == _crm_demo_plan(data, params),
+                "CRM demo selection/budget/master crosswalk mismatch.")
 
 
 def validate_dataset(output_path: Path) -> dict[str, Any]:
@@ -2865,6 +3079,10 @@ def _build_parser() -> argparse.ArgumentParser:
         "--identity-profile", choices=(BASELINE_IDENTITY_PROFILE, NATURAL_IDENTITY_PROFILE),
         default=BASELINE_IDENTITY_PROFILE,
         help="Select natural-v1 explicitly for demo names; preserves source/canonical keys.",
+    )
+    generate_parser.add_argument(
+        "--data-profile", choices=(VOLUME_DATA_PROFILE, DEMO_DATA_PROFILE), default=VOLUME_DATA_PROFILE,
+        help="crm-demo-v1 requires --customer-count 430 --order-count 1500 --identity-profile natural-v1.",
     )
     generate_parser.add_argument(
         "--run-version",
@@ -2922,6 +3140,7 @@ def main(argv: list[str] | None = None) -> int:
             if_exists=args.if_exists,
             catalog_profile=args.catalog_profile,
             identity_profile=args.identity_profile,
+            data_profile=args.data_profile,
         )
         try:
             result = generate_dataset(params)
