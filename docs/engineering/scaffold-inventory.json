@@ -14,7 +14,7 @@
     {"path": "contracts/README.md", "purpose": "Authoritative business contract navigation", "issues": [5], "status": "implemented"},
     {"path": "scenarios/README.md", "purpose": "Small canonical fixture navigation", "issues": [5, 18], "status": "implemented"},
     {"path": "sources/README.md", "purpose": "Native source package placement", "issues": [2, 6, 7], "status": "reserved"},
-    {"path": "sources/oracle/README.md", "purpose": "Oracle native schemas, seeds and Mirroring", "issues": [19, 21], "status": "reserved"},
+    {"path": "sources/oracle/README.md", "purpose": "Oracle native schema and seed adapter; Mirroring qualification remains", "issues": [19, 21], "status": "partial"},
     {"path": "sources/salesforce/README.md", "purpose": "Salesforce native metadata and seed adapters", "issues": [20], "status": "reserved"},
     {"path": "sources/sap/README.md", "purpose": "Distinct synthetic Plan B and conditional real Plan A", "issues": [6, 15], "status": "reserved"},
     {"path": "sources/sports/README.md", "purpose": "Authorized replay and live source adapters", "issues": [7], "status": "reserved"},
@@ -40,6 +40,7 @@
     {"path": "docs/runbooks/README.md", "purpose": "Operational and reconstruction runbook entry point", "issues": [3, 13], "status": "partial"},
     {"path": "docs/runbooks/oracle-gateway-reconstruction.md", "purpose": "Oracle/gateway commissioning lessons and reconstruction gates", "issues": [3, 19, 21], "status": "partial"},
     {"path": "docs/deployment-ownership-support-matrix.md", "purpose": "Single-writer and qualification contract", "issues": [3, 8], "status": "partial"},
-    {"path": "docs/dev-identity-pilot.md", "purpose": "Implemented read-only identity pilot and its limits", "issues": [8], "status": "implemented"}
+    {"path": "docs/dev-identity-pilot.md", "purpose": "Implemented read-only identity pilot and its limits", "issues": [8], "status": "implemented"},
+    {"path": "docs/oracle-cloud-integration-proposal.md", "purpose": "Review-only Oracle cloud integration proposal and owner boundaries", "issues": [19], "status": "partial"}
   ]
 }
