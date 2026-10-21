@@ -21,6 +21,8 @@ DEFAULT_SCENARIO_ID = "synthetic-grand-prix-promoter-v1"
 DEFAULT_SCENARIO_VERSION = "1.0.0"
 DEFAULT_DATASET_ID = "synthetic-gp-dataset-volume-v1"
 DEFAULT_PUBLICATION_KEY = "PUB-BULK-001"
+LEGACY_PROFILE = "single-event-v1"
+DEFAULT_CATALOG_PROFILE = "multi-event-v2"
 
 # Logical source mappings, not qualified schemas or executable source adapters.
 # path: (source system, logical source entity, canonical entity, row key)
@@ -76,9 +78,10 @@ class GenerationParameters:
     scenario_version: str = DEFAULT_SCENARIO_VERSION
     dataset_id: str = DEFAULT_DATASET_ID
     if_exists: str = "error"
+    catalog_profile: str = DEFAULT_CATALOG_PROFILE
 
     def as_dict(self) -> dict[str, Any]:
-        return {
+        result = {
             "customerCount": self.customer_count,
             "orderCount": self.order_count,
             "seed": self.seed,
@@ -88,11 +91,17 @@ class GenerationParameters:
             "scenarioVersion": self.scenario_version,
             "datasetId": self.dataset_id,
         }
+        if self.catalog_profile != LEGACY_PROFILE:
+            result["catalogProfile"] = self.catalog_profile
+        return result
 
     @property
     def namespace(self) -> str:
+        dimensions = [self.scenario_id, self.scenario_version, self.dataset_id, self.run_version, self.seed]
+        if self.catalog_profile != LEGACY_PROFILE:
+            dimensions.append(self.catalog_profile)
         return json.dumps(
-            [self.scenario_id, self.scenario_version, self.dataset_id, self.run_version, self.seed],
+            dimensions,
             separators=(",", ":"),
         )
 
@@ -126,6 +135,10 @@ class GenerationParameters:
             raise ValueError(f"Unsupported schema_version: {self.schema_version!r}.")
         if self.if_exists not in {"error", "verify-noop"}:
             raise ValueError("if_exists must be error or verify-noop.")
+        if self.catalog_profile not in {LEGACY_PROFILE, DEFAULT_CATALOG_PROFILE}:
+            raise ValueError("Unsupported catalog_profile.")
+        if self.catalog_profile == DEFAULT_CATALOG_PROFILE and self.order_count < 36:
+            raise ValueError("multi-event-v2 requires at least 36 orders to cover all events and saleable families.")
 
 
 def _safe_token(value: str) -> str:
@@ -235,6 +248,18 @@ def _financial_totals(records: dict[str, list[dict[str, Any]]]) -> dict[str, dic
     return totals
 
 
+def _event_financial_totals(records: dict[str, list[dict[str, Any]]]) -> dict:
+    grouped: dict[str, dict[str, list]] = {
+        event["eventKey"]: {path: [] for path in FILE_SPECS}
+        for event in records["oracle/oracle_event.jsonl"]
+    }
+    for path, rows in records.items():
+        for row in rows:
+            if "eventKey" in row:
+                grouped[row["eventKey"]][path].append(row)
+    return {key: _financial_totals(rows) for key, rows in grouped.items()}
+
+
 def _dataset_digest(manifest: dict[str, Any]) -> str:
     digest_input = {
         "namespace": manifest["namespace"],
@@ -242,6 +267,115 @@ def _dataset_digest(manifest: dict[str, Any]) -> str:
         "files": [{k: item[k] for k in ("path", "recordCount", "sha256")} for item in manifest["files"]],
     }
     return _sha256_bytes(_json_line(digest_input).encode("utf-8"))
+
+
+def _catalog_contexts(records: dict[str, list[dict[str, Any]]],
+                      params: GenerationParameters) -> list[dict[str, Any]]:
+    """Expand the baseline catalogue before generating dependent business records."""
+    event_path = "oracle/oracle_event.jsonl"
+    zone_path = "oracle/oracle_circuit_zone.jsonl"
+    product_path = "oracle/oracle_catalog_product.jsonl"
+    price_path = "oracle/oracle_price_list_entry.jsonl"
+    component_path = "oracle/oracle_bundle_component.jsonl"
+    session_path = "operational/replay_session.jsonl"
+    if params.catalog_profile == LEGACY_PROFILE:
+        return [{
+            "event": records[event_path][0], "session": records[session_path][0],
+            "products": {r["productCode"]: [r] for r in records[product_path]},
+            "prices": {r["productKey"]: [r] for r in records[price_path]},
+        }]
+
+    templates = {path: records[path] for path in
+                 (event_path, zone_path, product_path, price_path, component_path, session_path)}
+    for path in templates:
+        records[path] = []
+    contexts = []
+    boundaries = ["2030-01-01T00:00:00Z", "2030-04-01T00:00:00Z",
+                  "2030-07-01T00:00:00Z", "2030-10-01T00:00:00Z", "2031-01-01T00:00:00Z"]
+
+    def clone(template: dict, key_field: str, suffix: str, **fields: Any) -> dict:
+        row = copy.deepcopy(template)
+        row[key_field] += suffix
+        row["canonicalKey"] = row[key_field]
+        row["sourceKey"] += suffix
+        row.update(fields)
+        return row
+
+    for event_index in range(12):
+        suffix = f"-E{event_index + 1:02}"
+        start = datetime(2030, 4, 6, 13, tzinfo=timezone.utc) + timedelta(days=14 * event_index)
+        end = start + timedelta(hours=6)
+        replay = end + timedelta(days=1)
+        event = clone(
+            templates[event_path][0], "eventKey", suffix,
+            displayName=f"Synthetic Grand Prix {event_index + 1:02}",
+            eventStartAt=_iso(start), eventEndAt=_iso(end),
+            sourceUpdatedAt=_iso(end), ingestedAt=_iso(end + timedelta(minutes=1)),
+            bulkProfile=DEFAULT_CATALOG_PROFILE,
+        )
+        session = clone(
+            templates[session_path][0], "sessionKey", suffix,
+            eventKey=event["eventKey"], displayName=f"Synthetic Race Replay {event_index + 1:02}",
+            sessionStartAt=_iso(start), sessionEndAt=_iso(end), availableFrom=_iso(replay),
+            sourceUpdatedAt=_iso(replay), ingestedAt=_iso(replay + timedelta(minutes=1)),
+        )
+        records[event_path].append(event)
+        records[session_path].append(session)
+        zones = []
+        for zone_index in range(8):
+            zone = clone(
+                templates[zone_path][1], "zoneKey", f"{suffix}-Z{zone_index + 1:02}",
+                eventKey=event["eventKey"],
+                displayName=(f"Hospitality Suite {zone_index + 1:02}" if zone_index < 6
+                             else f"Standby Grandstand {zone_index - 5:02}"),
+            )
+            zones.append(zone)
+            records[zone_path].append(zone)
+        products_by_code: dict[str, list] = defaultdict(list)
+        prices_by_product: dict[str, list] = {}
+        for variant in range(6):
+            variant_suffix = f"{suffix}-T{variant + 1:02}"
+            for template in templates[product_path]:
+                code = template["productCode"]
+                replay_only = code == "PRD-REPLAY"
+                product = clone(
+                    template, "productKey", variant_suffix, eventKey=event["eventKey"],
+                    displayName=f"{template['displayName']} / tier {variant + 1:02} / GP {event_index + 1:02}",
+                    saleFrom=_iso(replay) if replay_only else template["saleFrom"],
+                    saleTo=_iso(min(replay + timedelta(days=90), datetime(2030, 12, 1, tzinfo=timezone.utc)))
+                    if replay_only else _iso(start),
+                    accessFrom=_iso(replay if replay_only else start),
+                    accessTo=session["availableTo"] if code in {"PRD-REPLAY", "PRD-WEEKEND"} else _iso(end),
+                    capacityPerUnit={zones[variant]["zoneKey"]: 1} if code == "PRD-HOSP" else {},
+                )
+                products_by_code[code].append(product)
+                records[product_path].append(product)
+                template_price = next(p for p in templates[price_path] if p["productKey"] == template["productKey"])
+                versions = []
+                for version in range(4):
+                    price = clone(
+                        template_price, "priceKey", f"{variant_suffix}-V{version + 1:02}",
+                        eventKey=event["eventKey"], productKey=product["productKey"],
+                        amountMinor=template_price["amountMinor"] * (100 + 10 * variant + 2 * event_index + 5 * version) // 100,
+                        effectiveFrom=boundaries[version], effectiveTo=boundaries[version + 1],
+                        sourceUpdatedAt=boundaries[version],
+                        ingestedAt=_iso(_timestamp(boundaries[version]) + timedelta(minutes=5)),
+                    )
+                    versions.append(price)
+                    records[price_path].append(price)
+                prices_by_product[product["productKey"]] = versions
+            for component_index, template in enumerate(templates[component_path]):
+                component_code = "PRD-REPLAY" if component_index == 0 else "PRD-HOSP"
+                component = clone(
+                    template, "bundleComponentKey", variant_suffix,
+                    eventKey=event["eventKey"],
+                    bundleProductKey=products_by_code["PRD-WEEKEND"][variant]["productKey"],
+                    componentProductKey=products_by_code[component_code][variant]["productKey"],
+                )
+                records[component_path].append(component)
+        contexts.append({"event": event, "session": session, "products": dict(products_by_code),
+                         "prices": prices_by_product})
+    return contexts
 
 
 def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[dict[str, Any]]], dict[str, Any]]:
@@ -447,6 +581,13 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
         )
         _append_record(records, "oracle/oracle_bundle_component.jsonl", component_record)
 
+    contexts = _catalog_contexts(records, params)
+    rich = params.catalog_profile == DEFAULT_CATALOG_PROFILE
+    products_by_key = {p["productKey"]: p for p in records["oracle/oracle_catalog_product.jsonl"]}
+    bundles_by_key: dict[str, list] = defaultdict(list)
+    for component in records["oracle/oracle_bundle_component.jsonl"]:
+        bundles_by_key[component["bundleProductKey"]].append(component)
+
     campaign_record = _build_common(
         canonical_key=campaign_key,
         source_system="salesforce",
@@ -469,6 +610,16 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
         }
     )
     _append_record(records, "salesforce/campaign.jsonl", campaign_record)
+    if rich:
+        records["salesforce/campaign.jsonl"] = []
+        for event_index, context in enumerate(contexts, 1):
+            campaign = copy.deepcopy(campaign_record)
+            scoped_key = f"{campaign_key}-E{event_index:02}"
+            campaign.update(campaignKey=scoped_key, canonicalKey=scoped_key,
+                            sourceKey=f"{campaign['sourceKey']}-E{event_index:02}",
+                            eventKey=context["event"]["eventKey"],
+                            displayName=f"Synthetic GP {event_index:02} Replay & Hospitality")
+            records["salesforce/campaign.jsonl"].append(campaign)
 
     customer_party_keys: list[str] = []
     customer_account_keys: list[str] = []
@@ -743,27 +894,41 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
 
         product_code = (["PRD-REPLAY", "PRD-HOSP", "PRD-WEEKEND"][index - 1]
                         if index <= 3 else rng.choice(weighted_products))
+        context = contexts[(index - 1) % len(contexts)]
+        if rich:
+            product_code = (["PRD-REPLAY", "PRD-HOSP", "PRD-WEEKEND"][(index - 1) // 12]
+                            if index <= 36 else product_code)
+        event_key = context["event"]["eventKey"]
+        event_start = _timestamp(context["event"]["eventStartAt"])
+        event_end = _timestamp(context["event"]["eventEndAt"])
+        replay_start = _timestamp(context["session"]["availableFrom"])
+        campaign_key = records["salesforce/campaign.jsonl"][(index - 1) % len(contexts)]["campaignKey"]
+        product = rng.choice(context["products"][product_code]) if rich else context["products"][product_code][0]
+        product_key = product["productKey"]
         party_idx = (rng.randint(1, params.fan_customer_count) if product_code == "PRD-REPLAY"
                      else rng.randint(params.fan_customer_count + 1, params.customer_count))
         party_key = customer_party_keys[party_idx - 1]
         account_key = customer_account_keys[party_idx - 1]
-        product_key = product_keys[product_code]
-        price_key = price_keys[product_code]
-        unit_price = next(
-            amount for code, _, _, amount in product_defs if code == product_code
-        )
         if product_code == "PRD-HOSP":
             quantity = 1
         elif product_code == "PRD-WEEKEND":
             quantity = 1 + rng.randint(0, 1)
         else:
             quantity = 1 + rng.randint(0, 3)
+        sale_start = replay_start if product_code == "PRD-REPLAY" else order_start
+        sale_days = 165 if product_code == "PRD-REPLAY" else 125
+        if rich:
+            sale_start = _timestamp(product["saleFrom"]) + timedelta(days=1)
+            sale_seconds = int((_timestamp(product["saleTo"]) - sale_start).total_seconds()) - 3600
+            created_at = sale_start + timedelta(seconds=rng.randint(0, sale_seconds))
+        else:
+            created_at = sale_start + timedelta(days=rng.randint(0, sale_days), minutes=rng.randint(0, 600))
+        price = next(p for p in context["prices"][product_key]
+                     if p["effectiveFrom"] <= _iso(created_at) < p["effectiveTo"])
+        price_key, unit_price = price["priceKey"], price["amountMinor"]
         line_net = quantity * unit_price
         line_tax = 0
         line_gross = line_net + line_tax
-        sale_start = replay_start if product_code == "PRD-REPLAY" else order_start
-        sale_days = 165 if product_code == "PRD-REPLAY" else 125
-        created_at = sale_start + timedelta(days=rng.randint(0, sale_days), minutes=rng.randint(0, 600))
         confirmed_at = created_at + timedelta(minutes=5 + rng.randint(0, 15))
         payment_resolved_at = confirmed_at - timedelta(minutes=1)
 
@@ -862,8 +1027,8 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
         order_totals["approvedSimulatedPaymentMinor"] += line_gross
 
         consumed = index % 11 == 0
-        access_from = replay_start if product_code == "PRD-REPLAY" else event_start
-        access_to = price_end if product_code != "PRD-HOSP" else event_end
+        access_from = _timestamp(product["accessFrom"])
+        access_to = _timestamp(product["accessTo"])
         consumed_at = max(replay_start if product_code == "PRD-WEEKEND" else access_from, confirmed_at) + timedelta(hours=1)
         entitlement_state = "consumed" if consumed else ("expired" if access_to <= as_of else "active")
         entitlement_record = _build_common(
@@ -892,25 +1057,17 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
                 "consumed": consumed,
                 "consumedAt": _iso(consumed_at) if consumed else None,
                 "accessScopes": [
-                    {"productKey": product_keys[f"PRD-{component}"],
-                     "validFrom": _iso(replay_start if component == "REPLAY" else event_start),
-                     "validTo": _iso(price_end if component == "REPLAY" else event_end)}
-                    for component in (["REPLAY", "HOSP"] if product_code == "PRD-WEEKEND"
-                                      else [product_code.removeprefix("PRD-")])
+                    {"productKey": p["productKey"], "validFrom": p["accessFrom"], "validTo": p["accessTo"]}
+                    for p in ([products_by_key[c["componentProductKey"]] for c in bundles_by_key[product_key]]
+                              if product_key in bundles_by_key else [product])
                 ],
             }
         )
         _append_record(records, "operational/entitlement.jsonl", entitlement_record)
         order_to_entitlement[order_key] = entitlement_record
 
-        zone_map = {
-            product_keys["PRD-REPLAY"]: {},
-            product_keys["PRD-HOSP"]: {"ZONE-PADDOCK": quantity},
-            product_keys["PRD-WEEKEND"]: {"ZONE-PADDOCK": quantity},
-        }
-        zone_demands_for_order = zone_map[product_key]
-        for zone_code, demand_quantity in zone_demands_for_order.items():
-            zone_demands[zone_code] += demand_quantity
+        zone_demands_for_order = dict(_physical_demand(product_key, products_by_key, bundles_by_key, quantity))
+        zone_demands.update(zone_demands_for_order)
         reservation_record = _build_common(
             canonical_key=reservation_key,
             source_system="synthetic-operational",
@@ -935,10 +1092,7 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
                 "confirmedAt": _iso(confirmed_at),
                 "expiresAt": _iso(created_at + timedelta(hours=1)),
                 "capacityScope": "physical" if zone_demands_for_order else "digital-no-physical-allocation",
-                "zoneDemands": {
-                    f"{zone_code}-{run_token}": quantity_value
-                    for zone_code, quantity_value in zone_demands_for_order.items()
-                },
+                "zoneDemands": zone_demands_for_order,
             }
         )
         _append_record(records, "operational/reservation.jsonl", reservation_record)
@@ -1322,8 +1476,11 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
         )
         _append_record(records, "sap_plan_b/document_link.jsonl", doc_link)
 
-    sponsorship_invoice_docs = max(3, sponsor_party_count // 2)
+    sponsorship_invoice_docs = max(len(contexts), 3, sponsor_party_count // 2)
     for index in range(1, sponsorship_invoice_docs + 1):
+        context = contexts[(index - 1) % len(contexts)]
+        event_key = context["event"]["eventKey"]
+        event_end = _timestamp(context["event"]["eventEndAt"])
         sponsor_account = sponsor_account_records[(index - 1) % len(sponsor_account_records)]
         agreement_key = f"AGREEMENT-{run_token}-{index:03}"
         commitment_key = f"COMMIT-{run_token}-{index:03}"
@@ -1471,7 +1628,7 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
 
     supplier_sources = [record["sourceKey"] for record in records["sap_plan_b/supplier.jsonl"]]
     cost_center_sources = [record["sourceKey"] for record in records["sap_plan_b/cost_center.jsonl"]]
-    supplier_cost_doc_count = max(6, params.order_count // 4_000)
+    supplier_cost_doc_count = max(len(contexts), 6, params.order_count // 4_000)
     for index in range(1, supplier_cost_doc_count + 1):
         supplier_source = supplier_sources[(index - 1) % len(supplier_sources)]
         cost_center_source = cost_center_sources[(index - 1) % len(cost_center_sources)]
@@ -1615,8 +1772,10 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
 
     # Now that demands are known, set scaled zone capacities.
     zone_capacity_map = {
-        f"ZONE-NORTH-{run_token}": zone_demands["ZONE-NORTH"] + max(1_000, params.order_count // 10),
-        f"ZONE-PADDOCK-{run_token}": zone_demands["ZONE-PADDOCK"] + max(500, params.order_count // 20),
+        z["zoneKey"]: zone_demands[z["zoneKey"]] + (
+            max(1_000, params.order_count // 10) if z["zoneKey"].startswith("ZONE-NORTH-")
+            else max(500, params.order_count // (20 * len(contexts))))
+        for z in records["oracle/oracle_circuit_zone.jsonl"]
     }
     for zone_record in records["oracle/oracle_circuit_zone.jsonl"]:
         zone_record["capacity"] = zone_capacity_map[zone_record["zoneKey"]]
@@ -1678,14 +1837,41 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
                          validTo=_iso(price_end), journey="sponsorship")
     physical_orders = [o for o in records["operational/commercial_order.jsonl"] if o["journey"] == "hospitality-b2b"]
     agreements = records["salesforce/sponsorship_agreement.jsonl"]
+    costs = records["sap_plan_b/supplier_cost.jsonl"]
     for index, allocation in enumerate(records["sap_plan_b/sap_cost_allocation.jsonl"]):
+        event_key = contexts[index % len(contexts)]["event"]["eventKey"]
         allocation.update(eventKey=event_key, allocatedAt=allocation["sourceUpdatedAt"], postedAt=allocation["sourceUpdatedAt"])
         if allocation["allocationTarget"] == "sponsorship-delivery":
-            allocation["sponsorshipAgreementKey"] = agreements[index % len(agreements)]["agreementKey"]
+            matching_agreements = [a for a in agreements if a["eventKey"] == event_key]
+            allocation["sponsorshipAgreementKey"] = matching_agreements[index % len(matching_agreements)]["agreementKey"]
         elif physical_orders:
-            allocation["partyKey"] = physical_orders[index % len(physical_orders)]["partyKey"]
-    for cost in records["sap_plan_b/supplier_cost.jsonl"]:
-        cost.update(eventKey=event_key, incurredAt=cost["sourceUpdatedAt"])
+            matching = [o for o in physical_orders if o["eventKey"] == event_key]
+            allocation["partyKey"] = matching[index % len(matching)]["partyKey"]
+        costs[index].update(eventKey=event_key, incurredAt=costs[index]["sourceUpdatedAt"])
+
+    if rich:
+        agreements_by_key = {r["agreementKey"]: r for r in agreements}
+        for path in (
+            "operational/commercial_order_line.jsonl", "operational/payment_simulation.jsonl",
+            "operational/reservation.jsonl", "operational/entitlement.jsonl",
+            "operational/scenario_credit.jsonl", "operational/command_receipt.jsonl",
+            "salesforce/campaign_touch.jsonl", "salesforce/opportunity.jsonl", "salesforce/case.jsonl",
+        ):
+            for row in records[path]:
+                row["eventKey"] = order_by_key[row["orderKey"]]["eventKey"]
+        for row in records["salesforce/sponsorship_commitment.jsonl"]:
+            row["eventKey"] = agreements_by_key[row["agreementKey"]]["eventKey"]
+        for row in records["sap_plan_b/sap_document.jsonl"]:
+            if "orderKey" in row:
+                row["eventKey"] = order_by_key[row["orderKey"]]["eventKey"]
+            elif "sponsorshipAgreementKey" in row:
+                row["eventKey"] = agreements_by_key[row["sponsorshipAgreementKey"]]["eventKey"]
+            else:
+                row["eventKey"] = costs_by_document[row["sourceKey"]]["eventKey"]
+        docs_by_key = {r["erpDocumentKey"]: r for r in records["sap_plan_b/sap_document.jsonl"]}
+        for path in ("sap_plan_b/sap_document_line.jsonl", "sap_plan_b/document_link.jsonl"):
+            for row in records[path]:
+                row["eventKey"] = docs_by_key[row["erpDocumentKey"]]["eventKey"]
 
     for path, (system, entity, canonical_entity, key_field) in FILE_SPECS.items():
         for row in records.setdefault(path, []):
@@ -1755,23 +1941,19 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
         "reconciliation": reconciliation,
         "financialTotalsBySourceCurrency": _financial_totals(records),
         "capacity": {
-            "zoneDemands": {
-                f"ZONE-NORTH-{run_token}": zone_demands["ZONE-NORTH"],
-                f"ZONE-PADDOCK-{run_token}": zone_demands["ZONE-PADDOCK"],
-            },
+            "zoneDemands": {key: zone_demands[key] for key in zone_capacity_map},
             "zoneCapacities": zone_capacity_map,
             "bundleComponentRule": {
-                product_keys["PRD-WEEKEND"]: [
-                    {"componentProductKey": product_keys["PRD-REPLAY"], "quantity": 1},
-                    {"componentProductKey": product_keys["PRD-HOSP"], "quantity": 1},
-                ]
+                key: [{"componentProductKey": c["componentProductKey"], "quantity": c["quantity"]} for c in components]
+                for key, components in bundles_by_key.items()
             },
         },
         "boundaries": {
             "supported": [
                 "Synthetic Oracle/Salesforce/SAP Plan B source-shaped records with provenance.",
                 "Separate synthetic operational command boundary for orders, payments, reservations, entitlements, and support credits.",
-                "One fictional event and one synthetic replay session.",
+                "Twelve fictional events with synthetic replay sessions." if rich
+                else "One fictional event and one synthetic replay session.",
             ],
             "unsupported": [
                 "No live product sales, no qualified live race source, and no real customer data.",
@@ -1784,6 +1966,8 @@ def build_export_records(params: GenerationParameters) -> tuple[dict[str, list[d
         "files": [],
     }
 
+    if rich:
+        report["financialTotalsByEventSourceCurrency"] = _event_financial_totals(records)
     return records, report
 
 
@@ -1931,12 +2115,42 @@ def _physical_demand(product_key: str, products: dict, bundles: dict, quantity: 
     return Counter({zone: quantity * units for zone, units in products[product_key]["capacityPerUnit"].items()})
 
 
+def _validate_event_links(data: dict, event_keys: set[str]) -> None:
+    shared_paths = {
+        "operational/party.jsonl", "salesforce/account.jsonl", "salesforce/contact.jsonl",
+        "salesforce/consent.jsonl", "sap_plan_b/business_partner.jsonl",
+        "sap_plan_b/supplier.jsonl", "sap_plan_b/cost_center.jsonl",
+    }
+    indexes = {
+        key_field: {r[key_field]: r["eventKey"] for r in data[path]}
+        for path, (_, _, _, key_field) in FILE_SPECS.items() if path not in shared_paths
+    }
+    indexes["sponsorshipAgreementKey"] = indexes["agreementKey"]
+    indexes["bundleProductKey"] = indexes["productKey"]
+    indexes["componentProductKey"] = indexes["productKey"]
+    for path, rows in data.items():
+        if path in shared_paths:
+            continue
+        for row in rows:
+            _expect(row.get("eventKey") in event_keys, f"{path}: missing event scope.")
+            for field, targets in indexes.items():
+                if field in row:
+                    _expect(row[field] in targets and targets[row[field]] == row["eventKey"],
+                            f"{path}: {field} crosses event or is missing.")
+    for path in (
+        "operational/commercial_order.jsonl", "salesforce/campaign.jsonl",
+        "salesforce/sponsorship_agreement.jsonl", "sap_plan_b/supplier_cost.jsonl",
+    ):
+        _expect({r["eventKey"] for r in data[path]} == event_keys, f"{path}: incomplete event coverage.")
+
+
 def _validate_semantics(manifest: dict, data: dict, output_path: Path) -> None:
     p = manifest["parameters"]
     params = GenerationParameters(
         output_path=output_path, customer_count=p["customerCount"], order_count=p["orderCount"],
         seed=p["seed"], run_version=p["runVersion"], schema_version=p["schemaVersion"],
         scenario_id=p["scenarioId"], scenario_version=p["scenarioVersion"], dataset_id=p["datasetId"],
+        catalog_profile=p.get("catalogProfile", LEGACY_PROFILE),
     )
     params.validate()
     _expect(p == params.as_dict(), "Unsupported or missing generation parameters.")
@@ -2047,19 +2261,26 @@ def _validate_semantics(manifest: dict, data: dict, output_path: Path) -> None:
     zones = index("oracle/oracle_circuit_zone.jsonl", "zoneKey")
     events = data["oracle/oracle_event.jsonl"]
     sessions = data["operational/replay_session.jsonl"]
-    _expect(len(events) == len(sessions) == 1, "Exactly one event and replay session required.")
-    event, session = events[0], sessions[0]
-    event_key = event["eventKey"]
-    _expect(event["eventStartAt"] < event["eventEndAt"] <= manifest["asOf"] and event["recordState"] == "completed",
-            "Invalid completed event interval/state.")
-    _expect(session["eventKey"] == event_key and session["playbackMode"] == "synthetic-replay"
-            and session["sessionStartAt"] == event["eventStartAt"] and session["sessionEndAt"] == event["eventEndAt"]
-            and event["eventEndAt"] < session["availableFrom"] <= manifest["asOf"] < session["availableTo"],
-            "Invalid replay interval/mode.")
+    rich = params.catalog_profile == DEFAULT_CATALOG_PROFILE
+    event_count = 12 if rich else 1
+    _expect(len(events) == len(sessions) == event_count, "Event/replay session population mismatch.")
+    events_by_key = {r["eventKey"]: r for r in events}
+    sessions_by_event = {r["eventKey"]: r for r in sessions}
+    _expect(set(sessions_by_event) == set(events_by_key), "Replay event coverage mismatch.")
+    for event in events:
+        session = sessions_by_event[event["eventKey"]]
+        _expect(event["eventStartAt"] < event["eventEndAt"] <= manifest["asOf"] and event["recordState"] == "completed",
+                "Invalid completed event interval/state.")
+        _expect(session["playbackMode"] == "synthetic-replay"
+                and session["sessionStartAt"] == event["eventStartAt"] and session["sessionEndAt"] == event["eventEndAt"]
+                and event["eventEndAt"] < session["availableFrom"] <= manifest["asOf"] < session["availableTo"],
+                "Invalid replay interval/mode.")
     for rows in data.values():
         for row in rows:
             if "eventKey" in row:
-                _expect(row["eventKey"] == event_key, "Foreign event reference.")
+                _expect(row["eventKey"] in events_by_key, "Foreign event reference.")
+    if rich:
+        _validate_event_links(data, set(events_by_key))
     customer_parties = [r for r in parties.values() if r["partyRole"] == "customer"]
     fan_customers = [r for r in customer_parties if r["customerType"] == "fan"]
     business_customers = [r for r in customer_parties if r["customerType"] == "business"]
@@ -2105,16 +2326,30 @@ def _validate_semantics(manifest: dict, data: dict, output_path: Path) -> None:
         _expect(parties[contact["partyKey"]]["customerType"] == "fan", "Contact must resolve person fan, not organization.")
 
     bundles: dict[str, list] = defaultdict(list)
-    _expect(len(products) == len(prices) == 4 and len(zones) == 2, "Catalogue population mismatch.")
-    code_products = {p["productCode"]: p for p in products.values()}
-    _expect(set(code_products) == {"PRD-REPLAY", "PRD-LIVE", "PRD-HOSP", "PRD-WEEKEND"}, "Wrong product codes.")
+    _expect(len(products) == (288 if rich else 4) and len(prices) == (1152 if rich else 4)
+            and len(zones) == (96 if rich else 2), "Catalogue population mismatch.")
+    for event_key in events_by_key:
+        event_products = [p for p in products.values() if p["eventKey"] == event_key]
+        _expect(Counter(p["productCode"] for p in event_products)
+                == Counter({code: 6 if rich else 1 for code in ("PRD-REPLAY", "PRD-LIVE", "PRD-HOSP", "PRD-WEEKEND")}),
+                "Wrong product codes or per-event coverage.")
+        _expect(sum(z["eventKey"] == event_key for z in zones.values()) == (8 if rich else 2),
+                "Zone event coverage mismatch.")
     paddock = next(k for k in zones if k.startswith("ZONE-PADDOCK-"))
     expected_prices = {"PRD-REPLAY": 5000, "PRD-LIVE": 7500, "PRD-HOSP": 100000, "PRD-WEEKEND": 105000}
     for product in products.values():
         code = product["productCode"]
+        event = events_by_key[product["eventKey"]]
+        session = sessions_by_event[product["eventKey"]]
         _expect(product["availability"] == ("unavailable-no-qualified-live-source" if code == "PRD-LIVE" else "available"),
                 "Unqualified live product must remain unavailable.")
-        _expect(product["capacityPerUnit"] == ({paddock: 1} if code == "PRD-HOSP" else {}), "Wrong physical product capacity mapping.")
+        if not rich:
+            _expect(product["capacityPerUnit"] == ({paddock: 1} if code == "PRD-HOSP" else {}), "Wrong physical product capacity mapping.")
+        else:
+            _expect((len(product["capacityPerUnit"]) == 1 if code == "PRD-HOSP" else not product["capacityPerUnit"]),
+                    "Wrong physical product capacity mapping.")
+        _expect(all(k in zones and zones[k]["eventKey"] == product["eventKey"] for k in product["capacityPerUnit"]),
+                "Product capacity crosses event.")
         _expect(product["saleFrom"] < product["saleTo"] and product["accessFrom"] < product["accessTo"], "Invalid product windows.")
         if code in {"PRD-HOSP", "PRD-WEEKEND", "PRD-LIVE"}:
             _expect(product["saleTo"] <= event["eventStartAt"] and product["accessFrom"] == event["eventStartAt"],
@@ -2128,22 +2363,44 @@ def _validate_semantics(manifest: dict, data: dict, output_path: Path) -> None:
             _expect(product["accessTo"] == session["availableTo"], "Bundle replay access interval mismatch.")
         _expect(all(type(units) is int and units > 0 for units in product["capacityPerUnit"].values()),
                 "Physical capacity units must be positive integers.")
+    prices_by_product: dict[str, list] = defaultdict(list)
     for price in prices.values():
-        _expect(price["productKey"] in products and price["amountMinor"] == expected_prices[products[price["productKey"]]["productCode"]]
+        _expect(price["productKey"] in products
+                and price["eventKey"] == products[price["productKey"]]["eventKey"]
+                and price["amountMinor"] > 0
+                and (rich or price["amountMinor"] == expected_prices[products[price["productKey"]]["productCode"]])
                 and price["effectiveFrom"] < price["effectiveTo"], "Invalid catalogue price.")
+        prices_by_product[price["productKey"]].append(price)
     _expect({r["productKey"] for r in prices.values()} == set(products), "Missing product price.")
+    for product_key, versions in prices_by_product.items():
+        versions = sorted(versions, key=lambda r: r["effectiveFrom"])
+        _expect(len(versions) == (4 if rich else 1), "Price version population mismatch.")
+        _expect(all(a["effectiveTo"] == b["effectiveFrom"] for a, b in zip(versions, versions[1:])),
+                "Overlapping or gapped price intervals for product/currency.")
+        _expect(not rich or (versions[0]["effectiveFrom"] <= products[product_key]["saleFrom"]
+                and versions[-1]["effectiveTo"] >= products[product_key]["saleTo"]),
+                "Prices do not cover product sales window.")
     for component in data["oracle/oracle_bundle_component.jsonl"]:
         _expect(type(component["quantity"]) is int and component["quantity"] > 0, "Invalid component quantity.")
         bundles[component["bundleProductKey"]].append(component)
-    weekend = code_products["PRD-WEEKEND"]["productKey"]
-    _expect(set(bundles) == {weekend} and len(bundles[weekend]) == 2
-            and {(c["componentProductKey"], c["quantity"]) for c in bundles[weekend]}
-            == {(code_products["PRD-HOSP"]["productKey"], 1), (code_products["PRD-REPLAY"]["productKey"], 1)}, "Invalid bundle composition.")
+    _expect(set(bundles) == {p["productKey"] for p in products.values() if p["productCode"] == "PRD-WEEKEND"},
+            "Invalid bundle composition.")
+    for bundle, components in bundles.items():
+        _expect(len(components) == 2 and len({c["componentProductKey"] for c in components}) == 2,
+                "Invalid bundle composition.")
+        _expect(all(c["componentProductKey"] in products and c["quantity"] == 1
+                    and products[c["componentProductKey"]]["eventKey"] == products[bundle]["eventKey"] for c in components),
+                "Bundle component crosses event or has invalid quantity.")
+        _expect({products[c["componentProductKey"]]["productCode"] for c in components} == {"PRD-REPLAY", "PRD-HOSP"},
+                "Invalid bundle composition.")
+        _physical_demand(bundle, products, bundles, 1)
     by_order = {}
     sold_demand = Counter({key: 0 for key in zones})
     for line in lines.values():
         _expect(line["orderKey"] in orders and line["productKey"] in products and line["priceKey"] in prices, "Missing order/product/price link.")
         order, product, price = orders[line["orderKey"]], products[line["productKey"]], prices[line["priceKey"]]
+        event = events_by_key[order["eventKey"]]
+        _expect(order["eventKey"] == product["eventKey"] == price["eventKey"], "Order catalogue crosses event.")
         _expect(line["orderKey"] not in by_order, "Expected exactly one line per order.")
         by_order[line["orderKey"]] = line
         _expect(type(line["quantity"]) is int and line["quantity"] > 0, "Line quantity must be a positive integer.")
@@ -2198,6 +2455,7 @@ def _validate_semantics(manifest: dict, data: dict, output_path: Path) -> None:
                 and order["createdAt"] <= payment["requestedAt"] <= payment["resolvedAt"] <= order["confirmedAt"],
                 "Invalid simulated payment lifecycle/link/amount.")
         _expect(entitlement["partyKey"] == reservation["partyKey"] == order["partyKey"]
+                and reservation["eventKey"] == order["eventKey"]
                 and entitlement["productKey"] == line["productKey"] and entitlement["quantityGranted"] == line["quantity"]
                 and entitlement["grantedAt"] == order["confirmedAt"], "Entitlement/reservation order cross-link mismatch.")
         _expect(entitlement["validFrom"] == product["accessFrom"] and entitlement["validTo"] == product["accessTo"], "Entitlement validity differs from product access.")
@@ -2259,14 +2517,15 @@ def _validate_semantics(manifest: dict, data: dict, output_path: Path) -> None:
             active_demand.update(demand)
     _expect(manifest["capacity"]["zoneDemands"] == dict(sold_demand), "Manifest sold capacity demand mismatch.")
     _expect(manifest["capacity"]["zoneCapacities"] == {k: r["capacity"] for k, r in zones.items()}, "Manifest capacity mismatch.")
-    _expect(manifest["capacity"]["bundleComponentRule"] == {weekend: [
-        {"componentProductKey": c["componentProductKey"], "quantity": c["quantity"]} for c in bundles[weekend]]},
+    _expect(manifest["capacity"]["bundleComponentRule"] == {key: [
+        {"componentProductKey": c["componentProductKey"], "quantity": c["quantity"]} for c in components]
+        for key, components in bundles.items()},
         "Manifest bundle rule mismatch.")
     for zone, row in zones.items():
         _expect(type(row["capacity"]) is int and row["capacity"] >= sold_demand[zone] >= active_demand[zone], "Derived physical demand exceeds capacity.")
 
     campaigns = index("salesforce/campaign.jsonl", "campaignKey")
-    _expect(len(campaigns) == 1 and len(data["salesforce/consent.jsonl"]) == len(fan_customers), "Campaign/consent population mismatch.")
+    _expect(len(campaigns) == event_count and len(data["salesforce/consent.jsonl"]) == len(fan_customers), "Campaign/consent population mismatch.")
     consent_parties = set()
     for consent in data["salesforce/consent.jsonl"]:
         _expect(consent["partyKey"] in parties and consent["partyKey"] not in consent_parties
@@ -2317,10 +2576,11 @@ def _validate_semantics(manifest: dict, data: dict, output_path: Path) -> None:
 
     agreements = index("salesforce/sponsorship_agreement.jsonl", "agreementKey")
     commitments = data["salesforce/sponsorship_commitment.jsonl"]
-    _expect(len(agreements) == len(commitments) == max(3, len(sponsors) // 2), "Sponsorship population mismatch.")
+    _expect(len(agreements) == len(commitments) == max(event_count, 3, len(sponsors) // 2), "Sponsorship population mismatch.")
     commitment_by_agreement = {r["agreementKey"]: r for r in commitments}
     _expect(set(commitment_by_agreement) == set(agreements), "Commitment agreement coverage mismatch.")
     for agreement in agreements.values():
+        event = events_by_key[agreement["eventKey"]]
         _expect(agreement["sponsorAccountKey"] in accounts and accounts[agreement["sponsorAccountKey"]]["segment"] == "sponsor",
                 "Agreement must resolve sponsor Account.")
         _expect(accounts[agreement["sponsorAccountKey"]]["sourceUpdatedAt"] <= agreement["signedAt"] == agreement["validFrom"]
@@ -2338,7 +2598,7 @@ def _validate_semantics(manifest: dict, data: dict, output_path: Path) -> None:
     links = index("sap_plan_b/document_link.jsonl", "documentLinkKey")
     costs = index("sap_plan_b/supplier_cost.jsonl", "supplierCostKey")
     allocations = data["sap_plan_b/sap_cost_allocation.jsonl"]
-    _expect(len(costs) == len(allocations) == max(6, params.order_count // 4000), "Cost/allocation population mismatch.")
+    _expect(len(costs) == len(allocations) == max(event_count, 6, params.order_count // 4000), "Cost/allocation population mismatch.")
     _expect(len(docs) == len(doc_lines) == len(links) == len(orders) + len(credits) + len(agreements) + len(costs), "ERP document/line/link population mismatch.")
     invoice_orders, credit_documents, sponsor_documents, cost_documents = set(), set(), set(), set()
     invoice_posted_at = {}
@@ -2412,7 +2672,8 @@ def _validate_semantics(manifest: dict, data: dict, output_path: Path) -> None:
     for allocation in allocations:
         _expect(allocation["supplierCostKey"] in costs, "Allocation missing supplier cost.")
         cost = costs[allocation["supplierCostKey"]]
-        _expect(allocation["supplierCostSourceKey"] == cost["sourceKey"] and allocation["supplierSourceKey"] == cost["supplierSourceKey"]
+        _expect(allocation["eventKey"] == cost["eventKey"]
+                and allocation["supplierCostSourceKey"] == cost["sourceKey"] and allocation["supplierSourceKey"] == cost["supplierSourceKey"]
                 and allocation["costCenterSourceKey"] == cost["costCenterSourceKey"] and allocation["currency"] == cost["currency"]
                 and cost["recordState"] == "allocated" and allocation["recordState"] == "posted"
                 and cost["incurredAt"] <= allocation["allocatedAt"] <= allocation["postedAt"], "Allocation source cross-link/timing mismatch.")
@@ -2455,6 +2716,9 @@ def _validate_semantics(manifest: dict, data: dict, output_path: Path) -> None:
         "sponsorshipFulfilledMinor": sum(r["fulfilledMinor"] for r in commitments),
     }
     _expect(manifest["reconciliation"] == reconciliation, "Separate financial reconciliation mismatch.")
+    if rich:
+        _expect(manifest["financialTotalsByEventSourceCurrency"] == _event_financial_totals(data),
+                "Per-event/source/currency financial totals mismatch.")
 
 
 def validate_dataset(output_path: Path) -> dict[str, Any]:
@@ -2496,6 +2760,11 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Number of commercial orders (default: 25,000).",
     )
     generate_parser.add_argument("--seed", default=DEFAULT_SEED, help="Deterministic seed string.")
+    generate_parser.add_argument(
+        "--catalog-profile", choices=(LEGACY_PROFILE, DEFAULT_CATALOG_PROFILE),
+        default=DEFAULT_CATALOG_PROFILE,
+        help="Versioned catalogue profile; single-event-v1 preserves the original 13-row Oracle baseline.",
+    )
     generate_parser.add_argument(
         "--run-version",
         default=DEFAULT_RUN_VERSION,
@@ -2550,6 +2819,7 @@ def main(argv: list[str] | None = None) -> int:
             scenario_version=args.scenario_version,
             dataset_id=args.dataset_id,
             if_exists=args.if_exists,
+            catalog_profile=args.catalog_profile,
         )
         try:
             result = generate_dataset(params)

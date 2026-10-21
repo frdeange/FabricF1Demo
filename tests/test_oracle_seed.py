@@ -9,7 +9,7 @@ from contextlib import redirect_stderr, redirect_stdout
 from dataclasses import replace
 from pathlib import Path
 
-from scripts.volume_fixture import GenerationParameters, generate_dataset
+from scripts.volume_fixture import GenerationParameters, LEGACY_PROFILE, generate_dataset
 from sources.oracle.seed import (
     NUMBER_COLUMN_PRECISIONS,
     TEXT_COLUMN_LENGTHS,
@@ -32,6 +32,7 @@ class OracleSeedTests(unittest.TestCase):
             self.export_path,
             customer_count=30,
             order_count=600,
+            catalog_profile=LEGACY_PROFILE,
         )
         generate_dataset(self.parameters)
 
@@ -79,6 +80,17 @@ class OracleSeedTests(unittest.TestCase):
             if path.is_file()
         }
         self.assertEqual(before, after)
+
+    def test_rich_catalog_exports_all_events_and_price_versions_without_schema_changes(self) -> None:
+        fixture = self.root / "rich-fixture"
+        generate_dataset(replace(self.parameters, output_path=fixture, catalog_profile="multi-event-v2"))
+        sql, counts = build_seed_sql(fixture)
+        self.assertEqual({"F1_EVENT": 12, "F1_ZONE": 96, "F1_PRODUCT": 288,
+                          "F1_PRICE": 1152, "F1_BUNDLE_COMPONENT": 144}, counts)
+        self.assertEqual(1692, sql.count("MERGE INTO "))
+        self.assertNotIn("DELETE FROM", sql)
+        self.assertNotIn("F1_ORDER", sql)
+        self.assertLess(max(len(line.encode("utf-8")) for line in sql.splitlines()), 2499)
 
     def test_sql_text_escapes_quotes(self) -> None:
         self.assertEqual("'O''Brien'", _sql_text("O'Brien"))
