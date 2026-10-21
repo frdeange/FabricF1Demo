@@ -18,6 +18,7 @@ from scripts.volume_fixture import (
     DEFAULT_CATALOG_PROFILE,
     FILE_SPECS,
     LEGACY_PROFILE,
+    NATURAL_IDENTITY_PROFILE,
     GenerationParameters,
     ValidationError,
     build_export_records,
@@ -542,6 +543,85 @@ class VolumeFixtureIntegrationTests(unittest.TestCase):
         rows[-1]["eventKey"] = rows[0]["eventKey"]
         self.corrupt({"operational/replay_session.jsonl": rows})
         self.assert_semantic_rejection("Replay event coverage")
+
+    def test_natural_identities_preserve_all_keys_relationships_and_oracle_bytes(self) -> None:
+        for profile in (LEGACY_PROFILE, DEFAULT_CATALOG_PROFILE):
+            with self.subTest(profile=profile):
+                baseline = replace(self.params, catalog_profile=profile)
+                natural = replace(baseline, identity_profile=NATURAL_IDENTITY_PROFILE)
+                old, old_manifest = build_export_records(baseline)
+                new, new_manifest = build_export_records(natural)
+                self.assertEqual(baseline.namespace, natural.namespace)
+                self.assertEqual(baseline.key_token, natural.key_token)
+                self.assertEqual(old_manifest["reconciliation"], new_manifest["reconciliation"])
+                self.assertEqual(old_manifest["populationCounts"], new_manifest["populationCounts"])
+                self.assertEqual(NATURAL_IDENTITY_PROFILE, new_manifest["parameters"]["identityProfile"])
+                for path in FILE_SPECS:
+                    if path.startswith("oracle/"):
+                        self.assertEqual(old[path], new[path])
+                    for before, after in zip(old[path], new[path], strict=True):
+                        changed = {field for field in before.keys() | after.keys() if before.get(field) != after.get(field)}
+                        self.assertLessEqual(changed, {"displayName", "firstName", "lastName", "identityProfile"})
+                natural_path = self.root / profile
+                generate_dataset(replace(natural, output_path=natural_path))
+                self.assertEqual("validated", validate_dataset(natural_path)["status"])
+                self.assertEqual("no-op-verified", generate_dataset(
+                    replace(natural, output_path=natural_path, if_exists="verify-noop"))["status"])
+                with self.assertRaises(FileExistsError):
+                    generate_dataset(replace(baseline, output_path=natural_path, if_exists="verify-noop"))
+
+    def test_natural_profile_full_scale_safe_names_and_cross_source_identity(self) -> None:
+        generate_dataset(GenerationParameters(self.output, identity_profile=NATURAL_IDENTITY_PROFILE))
+        validation = validate_dataset(self.output)
+        self.assertEqual((10000, 25000, 308365),
+                         (validation["customerCount"], validation["orderCount"], validation["recordCount"]))
+        parties = {r["partyKey"]: r for r in self.rows(PARTY)}
+        accounts = {r["partyKey"]: r for r in self.rows("salesforce/account.jsonl")}
+        fans = [p for p in parties.values() if p["partyType"] == "person"]
+        self.assertEqual(8000, len({p["displayName"] for p in fans}))
+        for party in parties.values():
+            self.assertNotIn("Synthetic", party["displayName"])
+            self.assertFalse(any(c.isdigit() for c in party["displayName"]))
+            self.assertEqual(party["displayName"], accounts[party["partyKey"]]["displayName"])
+            self.assertEqual("synthetic-only", party["syntheticProvenance"])
+            if party["partyType"] == "person":
+                self.assertEqual(f"{party['firstName']} {party['lastName']}", party["displayName"])
+                self.assertTrue(party["email"].endswith("@example.test"))
+            else:
+                self.assertNotIn("firstName", party)
+                self.assertIsNone(party["email"])
+        for contact in self.rows("salesforce/contact.jsonl"):
+            party = parties[contact["partyKey"]]
+            for field in ("firstName", "lastName", "displayName", "email"):
+                self.assertEqual(party[field], contact[field])
+        for bp in self.rows(BP):
+            if bp["bpRole"] == "Customer":
+                self.assertEqual(parties[bp["partyKey"]]["displayName"], bp["displayName"])
+        bps = {r["sourceKey"]: r for r in self.rows(BP)}
+        for supplier in self.rows("sap_plan_b/supplier.jsonl"):
+            self.assertEqual(supplier["displayName"], bps[supplier["bpSourceKey"]]["displayName"])
+
+    def test_natural_names_and_marker_corruption_rejected_after_rehash(self) -> None:
+        self.params = replace(self.params, catalog_profile=DEFAULT_CATALOG_PROFILE,
+                              identity_profile=NATURAL_IDENTITY_PROFILE)
+        self.generate_small()
+        for path, field, value in (
+            ("salesforce/contact.jsonl", "firstName", "Trial"),
+            ("salesforce/contact.jsonl", "displayName", "Synthetic Customer00001"),
+            ("salesforce/account.jsonl", "displayName", "Trial marker account"),
+            (BP, "displayName", "Other Company"),
+            ("sap_plan_b/supplier.jsonl", "displayName", "Other Supplier"),
+            (PARTY, "identityProfile", "unmarked"),
+        ):
+            with self.subTest(path=path, field=field):
+                original = self.rows(path)
+                rows = copy.deepcopy(original)
+                rows[0][field] = value
+                self.corrupt({path: rows})
+                try:
+                    self.assert_semantic_rejection("Natural synthetic identity|crosswalk mismatch")
+                finally:
+                    self.corrupt({path: original})
 
     def test_smallest_population_and_malformed_export_fail_explicitly(self) -> None:
         generate_dataset(replace(self.params, customer_count=2, order_count=3))
