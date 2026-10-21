@@ -2,7 +2,7 @@
 
 ## Preservation and reproducibility follow-up (2026-10-21)
 
-Status: documentation and local preservation authorized; no cloud execution.
+Status: local preservation and Git-root consolidation authorized; no cloud execution.
 
 The user authorized preserving the pending infrastructure work in local commits,
 documenting the manual commissioning steps, and assessing automation. Keep all
@@ -18,11 +18,14 @@ or destructive rebuild is authorized by this follow-up.
    success from proposed automation and from clean-machine validation.
 3. Run local checks and obtain independent actual-diff review before the final
    preservation handoff. Do not treat a local commit as a deployment or a PR.
-4. Only after a directly confirmed destination and coordinated project/session
-   migration, consolidate or relocate checkouts using Git-aware operations.
-   Preserve every branch and pending change and verify the backend before
-   retiring a worktree. This step is not a prerequisite for infrastructure work.
-   Do not move `.git`, remove checkouts or change project roots in phase 1.
+4. The user subsequently confirmed the shared project directory as the unique
+   Git root. After coordination and preservation, the primary checkout and
+   `.git` were promoted there, external worktree associations repaired, and
+   the redundant clean issue worktree retired. All branch references and
+   canonical state bytes were preserved. The old primary folder is empty but
+   remains locked by an existing process; do not kill it to force cleanup.
+   Copilot's old repository-project path needs application-level rebinding;
+   do not edit application databases or invent compatibility junctions.
 
 The unique state remains in the shared `.local\terraform` directory. Never
 create a second active state. Saved plans from before its relocation are not
@@ -34,15 +37,24 @@ unit tests passed. Independent review of the actual public diff, including
 the untracked workload and reconstruction runbook, returned no actionable
 findings. No deployed-state refresh, cloud plan/apply or clean-machine
 reconstruction was performed. The infrastructure snapshot is preserved in
-local commit `4f1ca65`; documentation is committed separately. Checkout
-consolidation/removal remains pending the directly confirmed destination and
-project/session coordination.
+local commit `4f1ca65`; documentation is committed separately. Primary-checkout
+changes were preserved in their original CI branch. The initial untracked
+planning skeleton was archived privately rather than publishing account
+details. Root-consolidation code is in commit `6b602a1`.
 
-Before any future root consolidation, account for the repository validator:
-it currently traverses local paths and rejects the private reference directory
-even if Git ignores it. Qualify validation/archive tooling to exclude private
-local content before placing that content under a Git root. `.gitignore` alone
-does not make every filesystem tool safe for the proposed layout.
+The validator now enumerates Git-visible paths, excluding ignored private trees
+while still rejecting force-tracked/nonignored private references. Git
+enumeration failures are explicit validation failures. Other archive/sharing
+tools still need their own private-content exclusions; `.gitignore` does not
+make every filesystem tool safe.
+
+Post-consolidation checks passed from the new root: repository validation,
+63 credential-free tests, Terraform formatting/validation and five mocked
+tests. The unique state remained byte-identical and readable (24 entries),
+all ten retained worktree associations resolved to the new common Git
+directory, and Git object connectivity passed. No cloud refresh or mutation
+was performed. The issue branch is not merged with later `origin/main`
+commits; preserving local work does not imply upstream integration.
 
 Model recommendation: `gpt-5-mini`, reasoning effort `medium`, for bounded
 documentation and mechanical preservation after scope approval. Recommend an
@@ -127,11 +139,12 @@ Source basis: Terraform Registry provider documentation plus local `terraform pr
 
 ## Local state rule
 
-Use one stable local backend path outside both Git checkouts and outside
-disposable session directories. The user-approved shared project-local folder
-is `.local` in the parent directory of the sibling checkouts. Canonical shape:
+Use one stable local backend path outside tracked content and disposable session
+directories. The user-approved local folder is `.local` directly inside the
+consolidated Git root, with restricted permissions and Git exclusions.
+Canonical shape:
 
-`<shared-project-folder>\.local\terraform\terraform.tfstate`
+`<project-root>\.local\terraform\terraform.tfstate`
 
 On 2026-10-21, the existing local secrets and state directories were moved from
 `%LOCALAPPDATA%\FabricF1Demo` into that shared `.local` folder, with file
@@ -149,8 +162,7 @@ a multi-machine coordination solution.
 From the repository root, initialize an explicit stable state path:
 
 ```powershell
-$sharedProjectDir = Split-Path -Parent (Get-Location).Path
-$stateDir = Join-Path $sharedProjectDir ".local\terraform"
+$stateDir = Join-Path (Get-Location).Path ".local\terraform"
 New-Item -ItemType Directory -Force -Path $stateDir | Out-Null
 $statePath = Join-Path $stateDir "terraform.tfstate"
 terraform -chdir=infra init -input=false "-backend-config=path=$statePath"
