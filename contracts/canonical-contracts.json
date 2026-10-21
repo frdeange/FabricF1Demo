@@ -13,6 +13,16 @@
     ],
     "sourceKeys": "Retain sourceSystem, sourceTenant, sourceEntity, and sourceKey as a separate unique cross-reference. Never use email, display name, or a source-local numeric ID as a shared key."
   },
+  "sourceOnlyInterlocutorPolicy": {
+    "owner": "Salesforce",
+    "appliesTo": "Explicit crm-demo-v1 profile only; existing fixtures and volume profiles remain unchanged.",
+    "grain": "One source Contact per organizational Account and interlocutor role (buyer, admin, billing).",
+    "identity": "Own stable source identity with accountSourceKey and organization partyKey; canonicalEntity and canonicalKey are null with an explicit source-only mapping reason.",
+    "buyer": "The existing organization Party remains the commercial buyer. An interlocutor is not an additional customer Party, fan, sponsor account or sale.",
+    "consent": "Do not infer fan marketing consent for organizational interlocutors.",
+    "support": "Keep organizational Case Contact null with an explicit reason until a separately approved contact assignment is modeled.",
+    "profiles": "Selected published volume master identities may be shared with a bounded demo via an explicit source crosswalk. New demo transaction facts require their own identity domain; package provenance does not redefine a master identity."
+  },
   "commonFields": {
     "required": [
       "canonicalKey",

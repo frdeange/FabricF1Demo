@@ -167,6 +167,113 @@ catalogue profiles byte-for-byte, including old manifests. Keeping that default
 is for reproducibility, not permission to use placeholder names in the next demo.
 The fixed small P1 scenario is not renamed.
 
+### Bounded CRM demo profile (#31)
+
+The explicit `crm-demo-v1` profile is separate from the offline 10k/25k volume
+profile and depends on the natural identity work in #29 / PR #30. It is a local
+logical export and planning manifest, **not a Salesforce import or schema**:
+
+```text
+python -m scripts.volume_fixture generate --output-path <new-bounded-demo-folder> --data-profile crm-demo-v1 --customer-count 430 --order-count 1500 --catalog-profile multi-event-v2 --identity-profile natural-v1
+python -m scripts.volume_fixture validate --output-path <new-bounded-demo-folder>
+```
+
+Those values are required together; incompatible overrides fail before output
+is created. The original small scenario and both original catalogue profiles,
+with or without `natural-v1`, remain reproducible when `--data-profile` is omitted.
+
+There are **400 person fan customers, 30 organizational hospitality customers,
+and 8 separate sponsor organizations**: 438 Parties and Accounts in total.
+Fans have one Contact each. Each of the 38 organizations has three source-only
+Contacts with `buyer`, `admin` and `billing` roles, giving **514 Contacts**.
+These 114 interlocutors are not new customer Parties, new sponsors, purchases,
+consent decisions or capacity owners. Each has its own deterministic Contact
+source key, `accountSourceKey`, organization `partyKey`, structured natural name
+and reserved `.test` email. Contact canonical entity/key remain null with the
+existing source-only mapping reason. The machine-readable
+`sourceOnlyInterlocutorPolicy` in `contracts/canonical-contracts.json` makes this
+distinction explicit; it does not create a new canonical person entity.
+
+The organization remains the buyer for hospitality/bundles. Organizational
+support Cases retain their explicit null Contact reason: the existence of three
+interlocutors does not authorize choosing one as the case actor or creating a
+native OpportunityContactRole. Consent remains limited to the 400 fan decisions.
+
+The profile generates **1,500 new operational orders across 12 events** with
+complete payment, entitlement, reservation, credit and SAP Plan B document graphs.
+The logical export keeps all rows; it does not truncate history to fit CRM.
+Oracle retains its five catalogue families and does not acquire customers or an
+operational order ledger.
+
+#### Identity and reconciliation with existing volume masters
+
+With the same seed/scenario/run settings, selected master identities are the
+published volume profile's first 400 fan customers, hospitality customer indices
+8001 through 8030, and eight sponsors. Their Party/Account/fan Contact source
+tuples, keys, natural names and Party source references are retained. Fan Accounts
+still do not create another Party. New B2B Contact keys are deterministic
+`<AccountKey>-CONTACT-<ROLE>` values, distinct from every fan Contact.
+
+`dataProfile` enters the demo package namespace/digest and the **new transactional
+identity domain**. New orders, lines, Cases, reservations, simulated payments,
+entitlements, credits, campaigns, ERP documents and catalogue records never reuse
+an old volume fact's identity for changed content. The catalogue has demo-scoped
+keys because base capacities reflect different demand; no identical-Oracle
+reload claim is made for this reduced profile. Selected CRM masters alone use
+the volume master token and source tenant while carrying demo package provenance.
+`crmDemoPlan.masterSelection` records the volume namespace, selected Party keys
+and typed source-reference crosswalk. Consumers must not assume one package
+namespace equals every row's source identity domain.
+
+The 100 previously loaded sample Account/Contact pairs, if present in an approved
+target, are **not 200 extra records**. A future loader must reconcile the recorded
+source tuple/Party crosswalk against native IDs and count the union. It must not
+match by names/emails or assume the crosswalk authorizes overwrite, replacement,
+deletion or a live reseed. Native IDs and reconciliation state remain outside Git.
+Use a new export directory; existing-output mismatch protection is unchanged.
+
+#### CRM selection and record budget
+
+`manifest.json` includes `crmDemoPlan`, an explicit deterministic selection of
+source keys, digest and logical counts. All master Accounts/Contacts, fan consents,
+campaigns, Cases and sponsor agreement/commitment pairs are selected. Ten eligible
+touches and ten hospitality opportunities per event are selected by stable source
+key; each retains its real generated order outside CRM and its existing
+Party/Account/Contact/campaign links. Insufficient per-event eligibility is an
+error, not a fill/default. The full 1,500 orders stay outside CRM.
+
+| Logical family | Selected rows | Candidate native object |
+| --- | ---: | --- |
+| Account | 438 | Account, unqualified mapping |
+| Contact | 514 | Contact, unqualified mapping |
+| Campaign | 12 | Campaign, unqualified mapping |
+| Consent | 400 | Unmapped |
+| CampaignTouch | 120 | Unmapped; not automatically CampaignMember |
+| Opportunity | 120 | Opportunity, unqualified mapping |
+| Case | 40 | Case, unqualified mapping |
+| SponsorshipAgreement | 12 | Unmapped |
+| SponsorshipCommitment | 12 | Unmapped |
+| **Logical selected total** | **1,668** | **Not a physical row guarantee** |
+| Shared auxiliary reserve | 120 | Across all required auxiliary families |
+| Planned total including reserve | 1,788 | Provisional design ceiling |
+| Unassigned headroom to 2,000 | 212 | Not automatic extra scope |
+
+The 120-row reserve is **shared**, not 120 per auxiliary object. Opportunity
+contact roles are optional (at most one per selected opportunity if subsequently
+required/qualified), not three per sale. CampaignMember is not a replacement for
+touch history, and neither it nor consent auxiliary entities are silently added.
+Physical mappings for Consent, CampaignTouch and sponsorship remain unresolved;
+even standard candidate objects require field/relationship qualification by #20.
+`physicalRows` and `physicalStorageBytes` therefore remain null, and `loadStatus`
+is explicitly blocked. Actual native amplification or unresolved mappings must
+block loading and trigger budget revision before import; no universal 2 KB/row
+storage estimate is inferred from Account/Contact observations.
+
+This implementation does not delete/reseed/import CRM records, modify schema or
+permissions, or authorize any source/cloud writes. #20 owns native mappings,
+consumer preflight and any separately authorized load; #19 owns Oracle source
+execution; #6 owns SAP Plan B processing.
+
 `multi-event-v2` requires **at least 36 orders** to cover all 12 events and three
 saleable families. Smaller regression runs can explicitly select
 `single-event-v1`. These are local exports, not a live reseed approval. Before
@@ -188,7 +295,9 @@ orders select only non-sponsor organization customers. Sponsors cannot buy throu
 either commercial journey. Fans map to a Salesforce Contact and its Account;
 business customers map directly to a Salesforce Account, distinct from sponsor
 Accounts. Source-only SAP Customer BPs preserve these typed Party crosswalks.
-Only fans receive synthetic person Contacts and explicit marketing consent rows.
+In the original volume profiles only fans receive synthetic person Contacts.
+Only fans receive explicit marketing consent rows; the bounded demo's additional
+B2B interlocutors follow the source-only policy above, not new Party ownership.
 Business support cases link to the customer Account and use a null Contact with
 `organization-account-no-person-contact`; no fictional contact is inferred from
 an organization. In the legacy profile, three or more orders exercise all three
