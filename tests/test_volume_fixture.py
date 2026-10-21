@@ -15,7 +15,9 @@ from pathlib import Path
 from scripts.volume_fixture import (
     DEFAULT_CUSTOMER_COUNT,
     DEFAULT_ORDER_COUNT,
+    DEFAULT_CATALOG_PROFILE,
     FILE_SPECS,
+    LEGACY_PROFILE,
     GenerationParameters,
     ValidationError,
     build_export_records,
@@ -60,7 +62,8 @@ class VolumeFixtureIntegrationTests(unittest.TestCase):
         self.addCleanup(directory.cleanup)
         self.root = Path(directory.name)
         self.output = self.root / "export"
-        self.params = GenerationParameters(self.output, customer_count=30, order_count=600)
+        self.params = GenerationParameters(self.output, customer_count=30, order_count=600,
+                                           catalog_profile=LEGACY_PROFILE)
 
     def generate_small(self) -> None:
         self.assertEqual("generated", generate_dataset(self.params)["status"])
@@ -112,9 +115,32 @@ class VolumeFixtureIntegrationTests(unittest.TestCase):
         self.assertEqual(set(FILE_SPECS), {f["path"] for f in manifest["files"]})
         self.assertEqual(_digest(manifest), validation["datasetDigestSha256"])
         self.assertEqual(10014, sum(f["recordCount"] for f in manifest["files"] if f["path"] == BP))
+        self.assertEqual(DEFAULT_CATALOG_PROFILE, manifest["parameters"]["catalogProfile"])
+        self.assertEqual(
+            {"OracleEvent": 12, "OracleCircuitZone": 96, "OracleCatalogProduct": 288,
+             "OraclePriceListEntry": 1152, "OracleBundleComponent": 144},
+            manifest["countsBySourceEntity"]["oracle"],
+        )
+        events = {r["eventKey"] for r in self.rows("oracle/oracle_event.jsonl")}
+        for path in (ORDER, ENTITLEMENT, RESERVATION, DOC, "salesforce/campaign.jsonl",
+                     "salesforce/campaign_touch.jsonl", "salesforce/opportunity.jsonl", "salesforce/case.jsonl",
+                     "salesforce/sponsorship_agreement.jsonl", "sap_plan_b/supplier_cost.jsonl"):
+            self.assertEqual(events, {r["eventKey"] for r in self.rows(path)}, path)
+        products = {r["productKey"] for r in self.rows(PRODUCT) if r["availability"] == "available"}
+        self.assertEqual(products, {r["productKey"] for r in self.rows(LINE)})
+        totals = manifest["financialTotalsByEventSourceCurrency"]
+        self.assertEqual(events, set(totals))
+        for event in totals.values():
+            operational = event["synthetic-operational"]["USD"]
+            sap = event["sap-plan-b-synthetic"]["USD"]
+            self.assertEqual(operational["commercialOrderGrossMinor"], sap["postedOrderInvoiceMinor"])
+            self.assertEqual(operational["scenarioCreditMinor"], sap["postedCustomerCreditMemoMinor"])
+            self.assertEqual(sap["supplierCostMinor"], sap["allocatedCostMinor"])
 
     def test_determinism_noop_and_no_overwrite_leave_all_bytes_unchanged(self) -> None:
         self.generate_small()
+        self.assertEqual("5f7724052ddc0830da6df79482231eaa0d6192a1dfe2951b3d0c7dd24ea28ce8",
+                         self.manifest()["datasetDigestSha256"])
         before = {p.relative_to(self.output): p.read_bytes() for p in self.output.rglob("*") if p.is_file()}
         self.assertEqual("no-op-verified", generate_dataset(replace(self.params, if_exists="verify-noop"))["status"])
         with self.assertRaises(FileExistsError):
@@ -410,6 +436,112 @@ class VolumeFixtureIntegrationTests(unittest.TestCase):
         self.assertIn("both person fans and organization hospitality buyers", errors.getvalue())
         self.assertEqual("", output.getvalue())
         self.assertFalse(self.output.exists())
+
+    def generate_rich(self, order_count: int = 600) -> None:
+        self.params = replace(self.params, catalog_profile=DEFAULT_CATALOG_PROFILE, order_count=order_count)
+        self.generate_small()
+
+    def test_rich_profile_determinism_isolation_and_minimum_coverage(self) -> None:
+        self.generate_rich(36)
+        self.assertEqual("no-op-verified", generate_dataset(replace(self.params, if_exists="verify-noop"))["status"])
+        before = {p.relative_to(self.output): p.read_bytes() for p in self.output.rglob("*") if p.is_file()}
+        other = self.root / "rich-other"
+        generate_dataset(replace(self.params, output_path=other))
+        self.assertEqual(before, {p.relative_to(other): p.read_bytes() for p in other.rglob("*") if p.is_file()})
+        self.assertEqual(12, len(self.rows("oracle/oracle_event.jsonl")))
+        self.assertEqual(Counter({e["eventKey"]: 3 for e in self.rows("oracle/oracle_event.jsonl")}),
+                         Counter(r["eventKey"] for r in self.rows(ORDER)))
+        with self.assertRaises(FileExistsError):
+            generate_dataset(replace(self.params, catalog_profile=LEGACY_PROFILE, if_exists="verify-noop"))
+        rich_records, _ = build_export_records(self.params)
+        legacy_records, _ = build_export_records(replace(self.params, catalog_profile=LEGACY_PROFILE))
+        rich_keys = {r["sourceKey"] for rows in rich_records.values() for r in rows}
+        self.assertTrue(rich_keys.isdisjoint(r["sourceKey"] for rows in legacy_records.values() for r in rows))
+        with self.assertRaisesRegex(ValueError, "at least 36"):
+            generate_dataset(replace(self.params, output_path=self.root / "too-small", order_count=35))
+
+    def test_rich_cross_event_links_rejected_after_rehash(self) -> None:
+        self.generate_rich()
+        events = self.rows("oracle/oracle_event.jsonl")
+        for path in (ORDER, LINE, PAYMENT, ENTITLEMENT, RESERVATION, CREDIT, DOC, DOCLINE, LINK,
+                     "salesforce/campaign_touch.jsonl", "salesforce/opportunity.jsonl",
+                     "salesforce/case.jsonl", "salesforce/sponsorship_commitment.jsonl",
+                     "sap_plan_b/sap_cost_allocation.jsonl"):
+            with self.subTest(path=path):
+                original = self.rows(path)
+                rows = copy.deepcopy(original)
+                rows[0]["eventKey"] = next(e["eventKey"] for e in events if e["eventKey"] != rows[0]["eventKey"])
+                self.corrupt({path: rows})
+                try:
+                    self.assert_semantic_rejection("crosses event")
+                finally:
+                    self.corrupt({path: original})
+
+    def test_rich_price_overlap_gap_and_wrong_effective_version_rejected_after_rehash(self) -> None:
+        self.generate_rich()
+        original = self.rows(PRICE)
+        for boundary in ("2030-03-31T00:00:00Z", "2030-04-02T00:00:00Z"):
+            rows = copy.deepcopy(original)
+            rows[1]["effectiveFrom"] = boundary
+            self.corrupt({PRICE: rows})
+            try:
+                self.assert_semantic_rejection("Overlapping or gapped")
+            finally:
+                self.corrupt({PRICE: original})
+        lines = self.rows(LINE)
+        selected = next(p for p in original if p["priceKey"] == lines[0]["priceKey"])
+        alternative = next(p for p in original if p["productKey"] == selected["productKey"]
+                           and p["priceKey"] != selected["priceKey"])
+        lines[0]["priceKey"] = alternative["priceKey"]
+        self.corrupt({LINE: lines})
+        self.assert_semantic_rejection("Selected price|not effective")
+
+    def test_rich_bundle_capacity_and_coverage_rejected_after_rehash(self) -> None:
+        self.generate_rich()
+        path = "oracle/oracle_bundle_component.jsonl"
+        original = self.rows(path)
+        for target in (original[2]["componentProductKey"], original[0]["bundleProductKey"]):
+            rows = copy.deepcopy(original)
+            if target == original[2]["componentProductKey"]:
+                target = next(r["componentProductKey"] for r in original if r["eventKey"] != rows[0]["eventKey"])
+            rows[0]["componentProductKey"] = target
+            self.corrupt({path: rows})
+            try:
+                self.assert_semantic_rejection("crosses event|Invalid bundle")
+            finally:
+                self.corrupt({path: original})
+        original_products = self.rows(PRODUCT)
+        products = copy.deepcopy(original_products)
+        hospitality = next(p for p in products if p["productCode"] == "PRD-HOSP")
+        other_zone = next(z for z in self.rows("oracle/oracle_circuit_zone.jsonl")
+                          if z["eventKey"] != hospitality["eventKey"])
+        hospitality["capacityPerUnit"] = {other_zone["zoneKey"]: 1}
+        self.corrupt({PRODUCT: products})
+        self.assert_semantic_rejection("capacity crosses event")
+        self.corrupt({PRODUCT: original_products})
+        zones_path = "oracle/oracle_circuit_zone.jsonl"
+        zones = self.rows(zones_path)
+        zone_key = next(key for r in self.rows(RESERVATION) for key in r["zoneDemands"])
+        next(z for z in zones if z["zoneKey"] == zone_key)["capacity"] = 0
+        manifest = self.manifest()
+        manifest["capacity"]["zoneCapacities"][zone_key] = 0
+        self.write_manifest(manifest)
+        self.corrupt({zones_path: zones})
+        self.assert_semantic_rejection("exceeds capacity")
+
+    def test_rich_manifest_event_finances_and_missing_coverage_rejected_after_rehash(self) -> None:
+        self.generate_rich()
+        original_manifest = self.manifest()
+        manifest = copy.deepcopy(original_manifest)
+        event = next(iter(manifest["financialTotalsByEventSourceCurrency"].values()))
+        event["sap-plan-b-synthetic"]["USD"]["postedOrderInvoiceMinor"] += 1
+        self.write_manifest(manifest)
+        self.assert_semantic_rejection("Per-event/source/currency")
+        self.write_manifest(original_manifest)
+        rows = self.rows("operational/replay_session.jsonl")
+        rows[-1]["eventKey"] = rows[0]["eventKey"]
+        self.corrupt({"operational/replay_session.jsonl": rows})
+        self.assert_semantic_rejection("Replay event coverage")
 
     def test_smallest_population_and_malformed_export_fail_explicitly(self) -> None:
         generate_dataset(replace(self.params, customer_count=2, order_count=3))

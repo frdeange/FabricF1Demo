@@ -30,6 +30,17 @@ approved Oracle identity. Fixture generation and seed execution are distinct
 from schema deployment. No Oracle credentials or live connection setup are
 stored here.
 
+The default `multi-event-v2` fixture exports **1,692 Oracle rows** into the same
+five tables: 12 events, 96 zones, 288 products, 1,152 price versions and 144
+bundle components. Use `--catalog-profile single-event-v1` for the original
+13-row commissioning baseline. Both profiles are validated before SQL export;
+the rich profile has isolated keys and does not replace or delete old rows.
+The [shared generator contract](../../docs/canonical-business-data-contracts.md)
+defines global customer/order totals, event attribution and effective prices.
+Generating richer SQL is not proof of a live load or native Mirroring acceptance;
+coordinate any source write and preservation/recovery of commissioning data
+with the #19 operator.
+
 Use an `AL32UTF8` database and a UTF-8 SQL*Plus client (`NLS_LANG` character
 set `AL32UTF8`). The exporter rejects values exceeding declared character
 widths, the standard 4000-byte text limit, or declared integer precisions.
