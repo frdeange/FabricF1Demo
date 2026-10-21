@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -108,6 +111,64 @@ class RepositoryValidationTests(unittest.TestCase):
         errors = validate_repo.run_checks(ROOT)
 
         self.assertEqual([], errors)
+
+
+@unittest.skipUnless(shutil.which("git"), "Git is required for ignore-scope tests")
+class GitValidationScopeTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.root = Path(self.directory.name)
+        subprocess.run(
+            ["git", "-C", str(self.root), "init", "--quiet"], check=True,
+            capture_output=True,
+        )
+        (self.root / ".gitignore").write_text(
+            ".local/\nFilesAndReferences/\n", encoding="utf-8"
+        )
+        for name in (".local", "FilesAndReferences"):
+            (self.root / name).mkdir()
+            (self.root / name / "synthetic.txt").write_text(
+                "synthetic test content only", encoding="utf-8"
+            )
+
+    def test_ignored_private_directories_are_outside_validation_scope(self) -> None:
+        paths = {str(relative) for relative, _ in validate_repo.iter_repo_paths(self.root)}
+        self.assertEqual({".gitignore"}, paths)
+        self.assertEqual([], validate_repo.check_internal_sibling_not_copied(self.root))
+
+    def test_force_tracked_private_reference_still_fails(self) -> None:
+        subprocess.run(
+            ["git", "-C", str(self.root), "add", "--force", "--",
+             "FilesAndReferences/synthetic.txt"], check=True, capture_output=True,
+        )
+        errors = validate_repo.check_internal_sibling_not_copied(self.root)
+        self.assertEqual(1, len(errors))
+        self.assertIn("Internal sibling path must not be committed", errors[0])
+
+    def test_nonignored_private_reference_still_fails(self) -> None:
+        (self.root / ".gitignore").write_text(".local/\n", encoding="utf-8")
+        self.assertEqual(
+            1, len(validate_repo.check_internal_sibling_not_copied(self.root))
+        )
+
+    def test_source_export_without_git_retains_filesystem_check(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "FilesAndReferences").mkdir()
+            self.assertTrue(validate_repo.check_internal_sibling_not_copied(root))
+
+    def test_git_enumeration_failure_is_a_validation_error(self) -> None:
+        for failure in (
+            FileNotFoundError("Git executable not found"),
+            subprocess.CalledProcessError(128, ["git", "ls-files"]),
+        ):
+            with self.subTest(failure=failure), mock.patch(
+                "scripts.validate_repo.subprocess.run", side_effect=failure
+            ):
+                errors = validate_repo.check_internal_sibling_not_copied(self.root)
+                self.assertEqual(1, len(errors))
+                self.assertIn("Cannot enumerate repository paths", errors[0])
 
 
 if __name__ == "__main__":

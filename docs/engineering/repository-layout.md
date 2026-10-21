@@ -16,7 +16,7 @@ tracked per area in the inventory.
 | [contracts](../../contracts/README.md) | Canonical business entities and invariants | Implemented (#5); do not duplicate into packages |
 | [scenarios](../../scenarios/README.md) | Small deterministic scenario and journey fixture | Implemented (#5); volume generator belongs to #18 |
 | [sources](../../sources/README.md) | Native source schemas/metadata, seed adapters and connector configuration | Partial: Oracle schema/seed #19; Mirroring qualification remains. Other owners: Salesforce #20, SAP #6/#15, sports #7 |
-| [infra](../../infra/README.md) | Infrastructure/bootstrap ownership entry point | Reserved here; existing Terraform remains #3-owned, host/gateway #21 |
+| [infra](../../infra/README.md) | Terraform infrastructure and bootstrap ownership | #3 root preserved here; host/gateway acceptance #21 remains partial |
 | [fabric](../../fabric/README.md) | Native item definitions below [workspace](../../fabric/workspace/README.md) | Reserved; ingestion #19/#20/#6, projections #4, intelligence #11, race path #7 |
 | [deploy](../../deploy/README.md) | Environment bindings, orchestration and release records | Reserved; deployment follow-up unassigned, coordination #3/#9 and workload owners |
 | [scripts](../../scripts/README.md) | Local validation/preflight and reconstruction entry points | Implemented validation; generator tracked separately in #18 |
@@ -101,7 +101,10 @@ neither automatically configures Rayfin runtime.
 One writer per artifact/destination: Terraform #3 retains its existing resources
 and single external local state. Do not import/re-own them, create a second state
 or add nested IaC without owner coordination. Future source host/gateway resources
-remain #21-owned and unapproved by this scaffold.
+require separate approval; the #3 root now preserves the separately approved
+pilot VMs/network. Guest commissioning and host/gateway qualification are
+documented in the [reconstruction runbook](../runbooks/oracle-gateway-reconstruction.md),
+not implied by Terraform provisioning.
 Fabric-cicd, native Git, Rayfin tooling and migrations must never compete for the
 same item. See the [deployment ownership matrix](../deployment-ownership-support-matrix.md).
 Pin executable tools/locks when selected; keep actions pinned to full SHAs.

@@ -8,6 +8,8 @@ dist/
 coverage/
 
 # Local credentials and generated environment files
+.local/
+/FilesAndReferences/
 .env
 .env.*
 !.env.example
@@ -18,6 +20,7 @@ apps/*/rayfin/.deployments.json
 
 # Infrastructure state and local provider data
 .terraform/
+**/.terraform/
 *.tfstate
 *.tfstate.*
 
@@ -31,3 +34,15 @@ apps/*/rayfin/.deployments.json
 !*.tfvars.example
 !*.tfvars.json.example
 *.tfplan
+*.plan
+*.tfplan.json
+*.plan.json
+terraform-plan*.json
+tfplan
+tfplan.json
+*.backup
+*.tfvars
+*.tfvars.json
+crash.log
+crash.*.log
+.azure/validate-status.json

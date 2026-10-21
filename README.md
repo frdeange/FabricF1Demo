@@ -20,19 +20,24 @@ owner handoff records a separately approved Terraform deployment of
 `rg-f1demo-swc`, F2 capacity `f1democapswc` in Sweden Central, and workspaces
 `f1-dev` and `f1-pro` on that capacity. The capacity was Active at verification;
 this is historical evidence, not a fresh live-state check. `f1-pro` is a stable
-demo workspace, not production. The handoff and Terraform changes remain
-uncommitted on the separate #3 branch according to that handoff. The validation
+demo workspace, not production. The #3 delivery preserves the Terraform
+configuration and commissioning handoff on its issue branch. The validation
 CI foundation and read-only DEV identity pilot are merged into `main` through
 [PR #17](https://github.com/frdeange/FabricF1Demo/pull/17); issue #8 is closed.
-That issue state does not qualify unattended deployment.
+That issue state does not qualify unattended deployment. The detailed #3
+deployment handoff is documented in [.azure/deployment-plan.md](.azure/deployment-plan.md).
 
 Infrastructure deployment does not qualify workloads or unattended deployment.
 Fabric Apps/Rayfin, workload identities and permissions, applicable licensing,
 and F2 workload fitness remain unqualified. Terraform uses one external local
 state; unattended infrastructure deployment remains blocked on protected state,
 coordination, recovery and a qualified clean-runner identity. No additional
-infrastructure, budgets, autopause or autoscale are configured; F4 requires
-separate approval. This update authorizes no cloud operation. See the
+budgets, Fabric autopause or autoscale are configured; F4 requires
+separate approval. The separately approved pilot VMs, network and VM shutdown
+schedules are described in [infra](infra/README.md). Guest setup, manual fixes
+and remaining reproducibility gates are recorded in the
+[Oracle/gateway runbook](docs/runbooks/oracle-gateway-reconstruction.md).
+This update authorizes no cloud operation. See the
 [deployment ownership and support matrix](docs/deployment-ownership-support-matrix.md).
 
 ## Contributing
