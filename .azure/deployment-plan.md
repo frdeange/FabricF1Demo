@@ -22,9 +22,10 @@ or destructive rebuild is authorized by this follow-up.
    Git root. After coordination and preservation, the primary checkout and
    `.git` were promoted there, external worktree associations repaired, and
    the redundant clean issue worktree retired. All branch references and
-   canonical state bytes were preserved. The old primary folder is empty but
-   remains locked by an existing process; do not kill it to force cleanup.
-   Copilot's old repository-project path needs application-level rebinding;
+   canonical state bytes were preserved. The old primary folder was removed
+   after the completed CI session released its lock through supported archival;
+   no processes were killed. Both old checkout folders are now absent.
+   Copilot's old repository-project path still needs application-level rebinding;
    do not edit application databases or invent compatibility junctions.
 
 The unique state remains in the shared `.local\terraform` directory. Never
