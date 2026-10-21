@@ -9,6 +9,7 @@ coverage/
 
 # Local credentials and generated environment files
 .local/
+/FilesAndReferences/
 .env
 .env.*
 !.env.example

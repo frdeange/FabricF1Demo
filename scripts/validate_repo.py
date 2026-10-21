@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path, PurePosixPath
 from urllib.parse import unquote, urlsplit
@@ -89,6 +90,18 @@ def read_repo_text(root: Path, relative_path: str) -> str:
 
 
 def iter_repo_paths(root: Path):
+    if (root / ".git").exists():
+        result = subprocess.run(
+            ["git", "-C", str(root), "ls-files", "--cached", "--others",
+             "--exclude-standard", "-z"],
+            check=True, capture_output=True, encoding="utf-8", errors="surrogateescape",
+        )
+        for name in result.stdout.split("\0"):
+            if name:
+                relative_path = Path(name)
+                yield relative_path, root / relative_path
+        return
+
     for path in root.rglob("*"):
         relative_path = path.relative_to(root)
         if relative_path.parts and relative_path.parts[0] == ".git":
@@ -177,9 +190,12 @@ def check_workflow(root: Path) -> list[str]:
 
 def check_internal_sibling_not_copied(root: Path) -> list[str]:
     errors: list[str] = []
-    for relative_path, _ in iter_repo_paths(root):
-        if any(part.casefold() == INTERNAL_SIBLING_NAME.casefold() for part in relative_path.parts):
-            errors.append(f"Internal sibling path must not be committed: {relative_path}")
+    try:
+        for relative_path, _ in iter_repo_paths(root):
+            if any(part.casefold() == INTERNAL_SIBLING_NAME.casefold() for part in relative_path.parts):
+                errors.append(f"Internal sibling path must not be committed: {relative_path}")
+    except (OSError, subprocess.CalledProcessError) as error:
+        errors.append(f"Cannot enumerate repository paths for private-reference validation: {error}")
     return errors
 
 
