@@ -9,6 +9,8 @@ Implemented documentation:
 - [DEV identity pilot](dev-identity-pilot.md) (#8).
 - [Engineering conventions](engineering/README.md) (#22).
 - [Oracle cloud integration proposal](oracle-cloud-integration-proposal.md) (#19; review-only).
+- [Salesforce Data 360 to OneLake integration](runbooks/salesforce-data360-onelake-integration.md)
+  (#33/#20; reconstruction, identity binding, sharing and read verification).
 
 [Runbooks](runbooks/README.md) include the
 [Oracle/gateway reconstruction checklist](runbooks/oracle-gateway-reconstruction.md)

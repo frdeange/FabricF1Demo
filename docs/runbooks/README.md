@@ -13,3 +13,8 @@ path.
 commissioning steps, manual corrections and automation candidates. A complete
 unattended installer and clean-machine reconstruction rehearsal are not yet
 qualified; the runbook explicitly retains those gates.
+
+[Salesforce Data 360 to OneLake integration](salesforce-data360-onelake-integration.md)
+preserves #33/#20's source ingestion, reader identity, outbound share/target,
+schema-scoped shortcuts, verification and recovery procedure. It separates
+observed live results from unqualified clean-environment reconstruction.
