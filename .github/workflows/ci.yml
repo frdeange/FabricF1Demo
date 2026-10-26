@@ -32,5 +32,8 @@ jobs:
       - name: Validate repository guardrails
         run: python -m scripts.validate_repo
 
+      - name: Install local SAP Parquet dependency
+        run: python -m pip install -r sources/sap/requirements.txt
+
       - name: Run validation tests
         run: python -m unittest discover -s tests -p "test_*.py" -v
